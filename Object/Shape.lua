@@ -1,4 +1,4 @@
-local Object = require('Object')
+local Object = require('Object.Object')
 
 Shape = setmetatable({}, { __index = Object })
 Shape.__index = Shape

@@ -21,16 +21,25 @@ function Log:getInstance()
 
     instance = sTone
 
-    -- local function onExit()
-    --     instance:flush()
-    -- end
+    local function onExit()
+        instance:add("log:onExit was called")
+        instance:flush()
+    end
+
+    debug.sethook(function(event)
+        if event == "exit" then
+            onExit()
+        end
+    end, "exit")
 
     -- Register the exit handler for Love2D
-    -- if love and love.event then
-    --     love.quit = function()
-    --         onExit()
-    --     end
-    -- end
+    if love and love.event then
+        love.quit = function()
+            instance:add("Love.quit was called")
+            instance:flush()
+            onExit()
+        end
+    end
 
     return instance
 end

@@ -1,5 +1,5 @@
 --to include:
--- local OBJECTMANAGER = require('ObjectManager')
+-- local OBJECTMANAGER = require('Object.Manager')
 -- local OM = OBJECTMANAGER:getInstance()
 -- OBJECTMANAGER = nil
 

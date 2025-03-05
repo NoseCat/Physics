@@ -1,48 +1,21 @@
-require('Vector')
-require('Object')
-require('Shape')
-require('Collision')
+require('Math.Vector')
 
-require('Kinematics')
+require('Object.Object')
+require('Object.Shape')
+local OBJECTMANAGER = require('Object.Manager')
+OM = OBJECTMANAGER:getInstance()
+
+require('Interaction.Collision')
+
+local LOG = require('Debug.Log')
+Log = LOG:getInstance()
 
 local FPSLimit = 60
 local showDebugInfo = true
 
-function get_current_working_directory()
-    local command
-    if love.system.getOS() == "Windows" then
-        command = "cd"
-    else
-        command = "pwd"
-    end
-
-    local handle = io.popen(command)
-    local result = handle:read("*a")
-    handle:close()
-
-    -- Remove trailing newline
-    result = result:gsub("\n", "")
-
-    return result
-end
-
-
 function love.load()
     love.window.setTitle("Physics")
     love.window.setMode(800, 600)
-
-    local LOG = require('Log')
-    Log = LOG:getInstance()
-    Log:add(get_current_working_directory())
-    Log:flush()
-    Log:close()
-    --file = io.open("log.txt", "r")
-    -- for line in io.lines("log.txt") do
-    --     error(line)
-    -- end
-
-    local OBJECTMANAGER = require('ObjectManager')
-    OM = OBJECTMANAGER:getInstance() 
 
     --test
     s1 = Shape:new(200,200)
@@ -64,14 +37,14 @@ local logFlushTime = 5
 function love.update(dt)
     NextTime = NextTime + 1 / FPSLimit
 
-    -- logFlushAcc = logFlushAcc + dt
-    -- if logFlushAcc > logFlushTime then
-    --     Log:flush()
-    -- end
+    logFlushAcc = logFlushAcc + dt
+    if logFlushAcc > logFlushTime then
+        Log:flush()
+    end
 
     --test
     s2.rot = s2.rot + dt
-    showDebugInfo, colPoint = GJKCheckCollision(s1, s2)
+    showDebugInfo, colPoint, distance = GJKCheckCollision(s1, s2)
     s3.points = MinkowskyDif(s1, s2)
 
     OM:update(dt)
@@ -86,10 +59,11 @@ function love.draw()
     if showDebugInfo then
         love.graphics.setColor(1, 1, 1)
         love.graphics.print("FPS: " .. love.timer.getFPS())
-        --colPoint.x = -(colPoint.x)
+        --colPsoint.x = -(colPoint.x)
         if colPoint then
             love.graphics.print("\nColPoint: " .. colPoint.x .. " " .. colPoint.y)
-            colPoint = colPoint + s1.pos
+            love.graphics.print("\n\nDistance: " .. distance)
+            colPoint = colPoint * distance + s1.pos
             love.graphics.circle("line", colPoint.x, colPoint.y, 10)
         end
         --love.graphics.print("\nFPS (average delta): " .. 1/love.timer.getAverageDelta())

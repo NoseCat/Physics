@@ -1,5 +1,5 @@
-require('Vector')
-local OBJECTMANAGER = require('ObjectManager')
+require('Math.Vector')
+local OBJECTMANAGER = require('Object.Manager')
 local OM = OBJECTMANAGER:getInstance()
 OBJECTMANAGER = nil
 
