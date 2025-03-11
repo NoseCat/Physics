@@ -1,10 +1,54 @@
 require('Math.Vector')
 require('Object.Shape')
 
---[[
+function SATCheckCollision(ShapeA, ShapeB)
+    local shapeARealPoints = ShapeA:getRealPoints()
+    local shapeBRealPoints = ShapeB:getRealPoints()
+    local normals = {}
+
+    --SAT needs to check all normals of both shapes' edges
+    local function getNormals(shapeRealPoints, shapeCenter)
+        for i = 1, #shapeRealPoints do
+            local j = i + 1
+            if j > #shapeRealPoints then j = 1 end
+
+            local edge = shapeRealPoints[i] - shapeRealPoints[j]
+            local normal = Vector:new(edge.y, -edge.x):normalized()
+            --ensure that normal points out of figure
+            if normal:dot(shapeRealPoints[i] - shapeCenter) < 0 then
+                normal = normal * -1
+            end
+            table.insert(normals, normal)
+        end
+    end
+    getNormals(shapeARealPoints, ShapeA.center + ShapeA.pos)
+    getNormals(shapeBRealPoints, ShapeB.center + ShapeB.pos)
+
+    local smallestLength = math.huge
+    local MTVaxis = Vector:new(0, 0)
+    for _, axis in ipairs(normals) do
+        local minA, maxA = ShapeA:project(axis)
+        local minB, maxB = ShapeB:project(axis)
+        --if there is atleast 1 axis with no overlap - shapes dont collide
+        if maxA < minB or maxB < minA then
+            return false, nil
+        end
+        --smalest overlap is length of MTV, axis is orientation 
+        local len = math.min(maxA, maxB) - math.max(minA, minB)
+        if len < smallestLength then
+            smallestLength = len
+            MTVaxis = axis
+        end
+    end
+    --no axis overlap
+    return true, MTVaxis * smallestLength
+end
+
+
+--[[=========================================
         GJK algorithm for collision detection
         with EPA
-]]
+=============================================]]
 
 function MinkowskyDif(ShapeA, ShapeB)
     local shapeARealPoints = ShapeA:getRealPoints()

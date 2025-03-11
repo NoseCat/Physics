@@ -27,8 +27,8 @@ function love.load()
     s2:addPoint(0,-60)
     s2:addPoint(-60,0)
     s2:addPoint(0,60)
-    s3 = Shape:new(400,400)
-
+    s2.rot = s2.rot + math.pi/4 
+    s2.pos.y = s2.pos.y + 10
     NextTime = love.timer.getTime()
 end
 
@@ -44,8 +44,12 @@ function love.update(dt)
 
     --test
     s2.rot = s2.rot + dt
-    showDebugInfo, colPoint, distance = GJKCheckCollision(s1, s2)
-    s3.points = MinkowskyDif(s1, s2)
+    s2.pos.x, s2.pos.y = love.mouse.getPosition()
+    showDebugInfo, MTV = SATCheckCollision(s1, s2)
+    -- if showDebugInfo then
+    --     s1.pos = s1.pos - MTV/2
+    --     s2.pos = s2.pos + MTV/2
+    -- end
 
     OM:update(dt)
 end
@@ -59,14 +63,9 @@ function love.draw()
     if showDebugInfo then
         love.graphics.setColor(1, 1, 1)
         love.graphics.print("FPS: " .. love.timer.getFPS())
-        --colPsoint.x = -(colPoint.x)
-        if colPoint then
-            love.graphics.print("\nColPoint: " .. colPoint.x .. " " .. colPoint.y)
-            love.graphics.print("\n\nDistance: " .. distance)
-            colPoint = colPoint * distance + s1.pos
-            love.graphics.circle("line", colPoint.x, colPoint.y, 10)
-        end
-        --love.graphics.print("\nFPS (average delta): " .. 1/love.timer.getAverageDelta())
+        love.graphics.print("\nMTVlen: " .. MTV:len())
+        MTV = MTV + s1.pos
+        love.graphics.line(s1.pos.x, s1.pos.y, MTV.x, MTV.y)
     end
 
     local curTime = love.timer.getTime()
