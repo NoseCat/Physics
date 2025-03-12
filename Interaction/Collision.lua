@@ -1,28 +1,39 @@
 require('Math.Vector')
 require('Object.Shape')
 
-function SATCheckCollision(ShapeA, ShapeB)
-    local shapeARealPoints = ShapeA:getRealPoints()
-    local shapeBRealPoints = ShapeB:getRealPoints()
-    local normals = {}
+function GetCollisionPoint(ShapeA, ShapeB)
+    local SArealPoints = ShapeA:getRealPoints()
+    local SBrealPoints = ShapeB:getRealPoints()
 
-    --SAT needs to check all normals of both shapes' edges
-    local function getNormals(shapeRealPoints, shapeCenter)
-        for i = 1, #shapeRealPoints do
-            local j = i + 1
-            if j > #shapeRealPoints then j = 1 end
-
-            local edge = shapeRealPoints[i] - shapeRealPoints[j]
-            local normal = Vector:new(edge.y, -edge.x):normalized()
-            --ensure that normal points out of figure
-            if normal:dot(shapeRealPoints[i] - shapeCenter) < 0 then
-                normal = normal * -1
+    for i = 1, #SArealPoints do
+        local inext = i + 1
+        if inext > #SArealPoints then inext = 1 end
+        for j = 1, #SBrealPoints do
+            local jnext = j + 1
+            if jnext > #SBrealPoints then jnext = 1 end
+            local intersection = SegmentIntersect(SArealPoints[i], SArealPoints[inext], SBrealPoints[j], SBrealPoints[jnext])
+            if intersection then
+                love.graphics.circle("fill", intersection.x, intersection.y, 5)
             end
+        end
+    end
+end
+
+function SATCheckCollision(ShapeA, ShapeB)
+    --SAT needs to check all normals of both shapes' edges
+    local normals = {}
+    local function getNormals(points, shapeCenter)
+        for i = 1, #points do
+            local j = i + 1
+            if j > #points then j = 1 end
+
+            local edge = points[i] - points[j]
+            local normal = Vector:new(edge.y, -edge.x):normalized()
             table.insert(normals, normal)
         end
     end
-    getNormals(shapeARealPoints, ShapeA.center + ShapeA.pos)
-    getNormals(shapeBRealPoints, ShapeB.center + ShapeB.pos)
+    getNormals(ShapeA:getRotatedPoints(), ShapeA.center)
+    getNormals(ShapeB:getRotatedPoints(), ShapeB.center)
 
     local smallestLength = math.huge
     local MTVaxis = Vector:new(0, 0)

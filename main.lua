@@ -23,11 +23,11 @@ function love.load()
     s1:addPoint(-40,0)
     s1:addPoint(0,40)
     s2 = Shape:new(150,155)
-    s2:addPoint(60,0)
-    s2:addPoint(0,-60)
-    s2:addPoint(-60,0)
-    s2:addPoint(0,60)
-    s2.rot = s2.rot + math.pi/4 
+    s2:addPoint(80,0)
+    s2:addPoint(20,-60)
+    s2:addPoint(-40,0)
+    s2:addPoint(20,60)
+    s2.rot = s2.rot + math.pi/4
     s2.pos.y = s2.pos.y + 10
     NextTime = love.timer.getTime()
 end
@@ -43,13 +43,17 @@ function love.update(dt)
     end
 
     --test
-    s2.rot = s2.rot + dt
+    s2.rot = s2.rot + dt/2
     s2.pos.x, s2.pos.y = love.mouse.getPosition()
     showDebugInfo, MTV = SATCheckCollision(s1, s2)
-    -- if showDebugInfo then
-    --     s1.pos = s1.pos - MTV/2
-    --     s2.pos = s2.pos + MTV/2
-    -- end
+    if showDebugInfo then
+        local minus = -1
+        if MTV:dot((s1.pos + s1.center) - (s2.pos + s2.center)) < 0 then
+            minus = 1
+        end
+        s1.pos = s1.pos - MTV/2 * minus
+        s2.pos = s2.pos + MTV/2 * minus
+    end
 
     OM:update(dt)
 end
@@ -63,9 +67,9 @@ function love.draw()
     if showDebugInfo then
         love.graphics.setColor(1, 1, 1)
         love.graphics.print("FPS: " .. love.timer.getFPS())
-        love.graphics.print("\nMTVlen: " .. MTV:len())
         MTV = MTV + s1.pos
         love.graphics.line(s1.pos.x, s1.pos.y, MTV.x, MTV.y)
+        GetCollisionPoint(s1,s2)
     end
 
     local curTime = love.timer.getTime()

@@ -4,10 +4,10 @@ Shape = setmetatable({}, { __index = Object })
 Shape.__index = Shape
 function Shape:new(a, b)
     local obj = Object.new(self, a, b)
-    --reletive to pos
-    obj.points = {}
     --relative to pos
     obj.center = Vector:new(a,b)
+    --reletive to pos
+    obj.points = {}
     return obj
 end
 
@@ -37,7 +37,7 @@ function Shape:updateCenter()
 end
 
 function Shape:draw()
---    Object.draw(self)
+    Object.draw(self)
     love.graphics.setColor({1,0,0})
     love.graphics.circle("fill", self.pos.x + self.center.x, self.pos.y + self.center.y, 10)
 
@@ -46,21 +46,29 @@ function Shape:draw()
     end
 
     love.graphics.setColor(0.7, 0.7, 0.7)
+    local realPoints = self:getRealPoints()
     local points = {}
-    for _, selfp in ipairs(self.points) do
-        local point = selfp:rotate(self.rot)
-        table.insert(points, point.x + self.pos.x)
-        table.insert(points, point.y + self.pos.y)
+    for _, point in ipairs(realPoints) do
+        table.insert(points, point.x)
+        table.insert(points, point.y)
     end
     love.graphics.setLineWidth(3)
     love.graphics.polygon("line", points)
 end
 
 function Shape:getRealPoints()
+    local rotPoints = self:getRotatedPoints()
     local points = {}
-    for _, selfp in ipairs(self.points) do
-        local point = selfp:rotate(self.rot)
-        table.insert(points, Vector:new(point.x + self.pos.x, point.y + self.pos.y))
+    for _, point in ipairs(rotPoints) do
+        table.insert(points, point + self.pos)
+    end
+    return points
+end
+
+function Shape:getRotatedPoints()
+    local points = {}
+    for _, point in ipairs(self.points) do
+        table.insert(points, point:rotateAround(self.center, self.rot))
     end
     return points
 end
