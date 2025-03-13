@@ -74,13 +74,13 @@ function Vector:project(A, B)
 end
 
 local function LineIntersect(line1A, line1B, line2A, line2B)
-    A1 = line1B.y - line1A.y;
-	B1 = line1A.x - line1B.x;
-	C1 = line1B.x * line1A.y - line1A.x * line1B.y;
+    local A1 = line1B.y - line1A.y;
+	local B1 = line1A.x - line1B.x;
+	local C1 = line1B.x * line1A.y - line1A.x * line1B.y;
 
-	A2 = line2B.y - line2A.y;
-	B2 = line2A.x - line2B.x;
-    C2 = line2B.x * line2A.y - line2A.x * line2B.y;
+	local A2 = line2B.y - line2A.y;
+	local B2 = line2A.x - line2B.x;
+    local C2 = line2B.x * line2A.y - line2A.x * line2B.y;
 
 	return Vector:new( (B1 * C2 - B2 * C1) / (A1 * B2 - A2 * B1),
                         (C1 * A2 - C2 * A1) / (A1 * B2 - A2 * B1) )

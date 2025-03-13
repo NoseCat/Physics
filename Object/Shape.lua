@@ -1,4 +1,7 @@
 local Object = require('Object.Object')
+local PHYSICSMANAGER = require('Object.PhysicsManager')
+local PM = PHYSICSMANAGER:getInstance()
+PHYSICSMANAGER = nil
 
 Shape = setmetatable({}, { __index = Object })
 Shape.__index = Shape
@@ -8,32 +11,15 @@ function Shape:new(a, b)
     obj.center = Vector:new(a,b)
     --reletive to pos
     obj.points = {}
+    --false - wont move on collision, true - moves full MTV
+    obj.static = false
+    table.insert(PM.objs, obj)
     return obj
 end
 
 function Shape:addPoint(x, y)
     table.insert(self.points, Vector:new(x, y))
     self:updateCenter()
-end
-
-function Shape:updateCenter()
-    if #self.points == 0 then
-        return
-    end
-    if #self.points == 1 then
-        self.center = self.points[1]
-        return
-    end
-    if #self.points == 2 then
-        self.center = (self.points[1] + self.points[2])/2
-        return
-    end
-
-    local sumPoints = Vector:new(0,0)
-    for _, point in ipairs(self.points) do
-        sumPoints = sumPoints + point
-    end
-    self.center = sumPoints / #self.points
 end
 
 function Shape:draw()
@@ -54,6 +40,34 @@ function Shape:draw()
     end
     love.graphics.setLineWidth(3)
     love.graphics.polygon("line", points)
+end
+
+function Shape:update(delta)
+   Object.update(self, delta)
+end
+
+function Shape:collide(ShapeB)
+    return Collide(self, ShapeB)
+end
+
+function Shape:updateCenter()
+    if #self.points == 0 then
+        return
+    end
+    if #self.points == 1 then
+        self.center = self.points[1]
+        return
+    end
+    if #self.points == 2 then
+        self.center = (self.points[1] + self.points[2])/2
+        return
+    end
+
+    local sumPoints = Vector:new(0,0)
+    for _, point in ipairs(self.points) do
+        sumPoints = sumPoints + point
+    end
+    self.center = sumPoints / #self.points
 end
 
 function Shape:getRealPoints()

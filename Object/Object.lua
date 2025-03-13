@@ -49,4 +49,15 @@ function Object:kill()
     self.live = false
 end
 
+function Object:isInstanceOf(class)
+    local mt = getmetatable(self)
+    while mt do
+        if mt == class then
+            return true
+        end
+        mt = getmetatable(mt)
+    end
+    return false
+end
+
 return Object

@@ -4,6 +4,8 @@ require('Object.Object')
 require('Object.Shape')
 local OBJECTMANAGER = require('Object.Manager')
 OM = OBJECTMANAGER:getInstance()
+local PHYSICSMANAGER = require('Object.PhysicsManager')
+local PM = PHYSICSMANAGER:getInstance()
 
 require('Interaction.Collision')
 
@@ -29,6 +31,7 @@ function love.load()
     s2:addPoint(20,60)
     s2.rot = s2.rot + math.pi/4
     s2.pos.y = s2.pos.y + 10
+    --s1.static = true
     NextTime = love.timer.getTime()
 end
 
@@ -43,19 +46,12 @@ function love.update(dt)
     end
 
     --test
-    s2.rot = s2.rot + dt/2
+    --s2.rot = s2.rot + dt/2
     s2.pos.x, s2.pos.y = love.mouse.getPosition()
-    showDebugInfo, MTV = SATCheckCollision(s1, s2)
-    if showDebugInfo then
-        local minus = -1
-        if MTV:dot((s1.pos + s1.center) - (s2.pos + s2.center)) < 0 then
-            minus = 1
-        end
-        s1.pos = s1.pos - MTV/2 * minus
-        s2.pos = s2.pos + MTV/2 * minus
-    end
+    --collision = Collide(s1,s2)
 
     OM:update(dt)
+    PM:iterate()
 end
 
 function love.draw()
@@ -64,13 +60,12 @@ function love.draw()
     love.graphics.setLineWidth(1)
 
     --debug
-    if showDebugInfo then
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.print("FPS: " .. love.timer.getFPS())
-        MTV = MTV + s1.pos
-        love.graphics.line(s1.pos.x, s1.pos.y, MTV.x, MTV.y)
-        GetCollisionPoint(s1,s2)
-    end
+    -- if collision.isCollided then
+    --     love.graphics.setColor(1, 1, 1)
+    --     love.graphics.print("FPS: " .. love.timer.getFPS())
+    --     love.graphics.line(s1.pos.x, s1.pos.y, collision.mtv.x + s1.pos.x, collision.mtv.y + s1.pos.y)
+    --     love.graphics.circle("fill", collision.point.x,  collision.point.y, 5)
+    -- end
 
     local curTime = love.timer.getTime()
     if NextTime <= curTime then

@@ -1,9 +1,64 @@
 require('Math.Vector')
 require('Object.Shape')
 
-function GetCollisionPoint(ShapeA, ShapeB)
+Collision = {}
+Collision.__index = Collision
+
+function Collision:new(shapeA, shapeB)
+    local instance = setmetatable({}, Collision)
+
+    instance.isCollided = false
+    instance.shapeA = shapeA
+    instance.shapeB = shapeB
+
+    instance.point = Vector:new(0,0)
+    instance.mtv = Vector:new(0,0)
+
+    return instance
+end
+
+function Collide(ShapeA, ShapeB)
+    local collision = Collision:new(ShapeA, ShapeB)
+
+    local isCollided, MTV = SATCheckCollision(ShapeA, ShapeB)
+    collision.isCollided = isCollided
+    local colPoints = GetCollisionPoints(ShapeA, ShapeB)
+
+    if isCollided and MTV then
+        local minus = -1
+        if MTV:dot((ShapeA.pos + ShapeA.center) - (ShapeB.pos + ShapeB.center)) < 0 then
+            minus = 1
+        end
+        MTV = MTV * minus -- fix MTV
+        collision.mtv = MTV
+        --resolve collision
+        local staticA = 0.5
+        local staticB = 0.5
+        if ShapeA.static and ShapeB.static then
+            staticA, staticB = 0, 0
+        elseif ShapeA.static then
+            staticA, staticB = 0, 1
+        elseif ShapeB.static then
+            staticA, staticB = 1, 0
+        end
+        ShapeA.pos = ShapeA.pos - MTV * staticA 
+        ShapeB.pos = ShapeB.pos + MTV * staticB
+
+        local sumColPoints = Vector:new(0,0)
+        for _, point in ipairs(colPoints) do
+            sumColPoints = sumColPoints + point
+        end
+        if #colPoints > 0 then
+            collision.point = sumColPoints / #colPoints
+        end
+    end
+    return collision
+end
+
+function GetCollisionPoints(ShapeA, ShapeB)
     local SArealPoints = ShapeA:getRealPoints()
     local SBrealPoints = ShapeB:getRealPoints()
+    local points = {}
 
     for i = 1, #SArealPoints do
         local inext = i + 1
@@ -13,11 +68,16 @@ function GetCollisionPoint(ShapeA, ShapeB)
             if jnext > #SBrealPoints then jnext = 1 end
             local intersection = SegmentIntersect(SArealPoints[i], SArealPoints[inext], SBrealPoints[j], SBrealPoints[jnext])
             if intersection then
-                love.graphics.circle("fill", intersection.x, intersection.y, 5)
+                table.insert(points, intersection)
             end
         end
     end
+    return points
 end
+
+--[[=========================================
+        SAT algorithm for collision detection
+=============================================]]
 
 function SATCheckCollision(ShapeA, ShapeB)
     --SAT needs to check all normals of both shapes' edges
