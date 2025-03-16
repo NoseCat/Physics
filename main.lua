@@ -14,7 +14,6 @@ local LOG = require('Debug.Log')
 Log = LOG:getInstance()
 
 local FPSLimit = 60
-local showDebugInfo = true
 
 function love.load()
     love.window.setTitle("Physics")
@@ -29,17 +28,19 @@ function love.load()
     floor:addPoint(400, 20)
     floor.static = true
 
-    s1 = PhysicsBody:new(200,200, 10)
+    s1 = PhysicsBody:new(400,200, 10)
     s1:addPoint(40,0)
     s1:addPoint(-40,0)
     s1:addPoint(0,40)
-    s2 = PhysicsBody:new(150,155, 2)
+    s1.force = Vector:new(-500000, 0)
+    s2 = PhysicsBody:new(150,200, 2)
     s2:addPoint(80,0)
     s2:addPoint(20,-60)
     s2:addPoint(-40,0)
     s2:addPoint(20,60)
     s2.rot = s2.rot + math.pi/4
     s2.pos.y = s2.pos.y + 10
+    s2.force = Vector:new(500000, 0)
     --s1.static = true
     NextTime = love.timer.getTime()
 end

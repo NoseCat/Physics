@@ -3,7 +3,7 @@
 -- local PM = PHYSICSMANAGER:getInstance()
 -- PHYSICSMANAGER = nil
 
-FreeFallAcceleration = 9.81 * 20
+FreeFallAcceleration = 9.8 * 10 * 2
 Drag = 5
 RotDrag = 10000
 
@@ -24,13 +24,14 @@ function PhysicsManager:getInstance()
     return instance
 end
 
+--TODO add margin to bounce
 function PhysicsManager:iterate(delta, iterations)
     local collisions = {}
     for i = 1, iterations, 1 do
         for _, obj1 in ipairs(self.objs) do
             for _, obj2 in ipairs(self.objs) do
                 local collision = obj1:collide(obj2)
-                if collision.isCollided then
+                if collision.isCollided and i == 1 then
                     table.insert(collisions, collision)
                 end
                 collision:resolve()
@@ -46,10 +47,6 @@ function PhysicsManager:iterate(delta, iterations)
 
     for _, collision in ipairs(collisions) do
         local mtv = collision.mtv:normalized()
-        local ShapeAN = mtv * collision.shapeA.force:dot(mtv) * -1
-        collision.shapeA:applyForceAtPoint(ShapeAN, collision.point)
-        local ShapeBN = mtv * collision.shapeB.force:dot(mtv) 
-        collision.shapeB:applyForceAtPoint(ShapeBN, collision.point)
         local relVel = collision.shapeB.vel - collision.shapeA.vel
         local velAlongNormal = relVel:dot(mtv)
         if velAlongNormal > 0 then
@@ -58,11 +55,11 @@ function PhysicsManager:iterate(delta, iterations)
         --add friction
         --bounce can be calculated in different ways based on options of objects
         local bounce = math.min(collision.shapeA.bounce, collision.shapeB.bounce)
-        local impulse = -(1 + bounce) * velAlongNormal
-        impulse = impulse / (1 / collision.shapeA.mass + 1 / collision.shapeB.mass)
+        local impulse = (1 + bounce) * velAlongNormal * collision.shapeA.mass * collision.shapeB.mass
+        impulse = impulse / (collision.shapeA.mass + collision.shapeB.mass)
 
-        collision.shapeA:applyForceAtPoint(mtv * -impulse, collision.point)
-        collision.shapeB:applyForceAtPoint(mtv * impulse, collision.point)
+        collision.shapeA:applyForceAtPoint(mtv * (impulse/delta), collision.point)
+        collision.shapeB:applyForceAtPoint(mtv * -(impulse/delta), collision.point)
     end
 end
 

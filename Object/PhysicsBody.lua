@@ -48,7 +48,7 @@ function PhysicsBody:updateConstants()
         end
     end
 
-    local k = 0.1
+    local k = 0.5
     L = maxDistance
     self.inertia = k * self.mass * L^2
 end
