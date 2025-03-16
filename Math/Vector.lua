@@ -19,10 +19,6 @@ function Vector.__mul(a, b)
     return Vector:new(a.x * b, a.y * b)
 end
 
-function Vector:dot(b)
-    return self.x * b.x + self.y * b.y
-end
-
 function Vector.__div(a, b)
     return Vector:new(a.x / b, a.y / b)
 end
@@ -42,6 +38,14 @@ function Vector:normalized()
         return Vector:new(0,0)
     end
     return Vector:new(self.x / len, self.y / len)
+end
+
+function Vector:dot(b)
+    return self.x * b.x + self.y * b.y
+end
+
+function Vector:cross(b)
+    return self.x * b.y - self.y * b.x
 end
 
 --radians, clockwise
@@ -67,7 +71,7 @@ function Vector:project(A, B)
         return A
     end
 
-    local t = AP:dot(AB) / ab2  
+    local t = AP:dot(AB) / ab2
     t = math.max(0, math.min(1, t))
 
     return Vector:new(A.x + t * AB.x, A.y + t * AB.y)

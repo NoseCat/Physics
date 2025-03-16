@@ -31,18 +31,6 @@ function Collide(ShapeA, ShapeB)
         end
         MTV = MTV * minus -- fix MTV
         collision.mtv = MTV
-        --resolve collision
-        local staticA = 0.5
-        local staticB = 0.5
-        if ShapeA.static and ShapeB.static then
-            staticA, staticB = 0, 0
-        elseif ShapeA.static then
-            staticA, staticB = 0, 1
-        elseif ShapeB.static then
-            staticA, staticB = 1, 0
-        end
-        ShapeA.pos = ShapeA.pos - MTV * staticA 
-        ShapeB.pos = ShapeB.pos + MTV * staticB
 
         local sumColPoints = Vector:new(0,0)
         for _, point in ipairs(colPoints) do
@@ -53,6 +41,23 @@ function Collide(ShapeA, ShapeB)
         end
     end
     return collision
+end
+
+function Collision:resolve()
+    if not self.isCollided then
+        return
+    end
+    local staticA = 0.5
+    local staticB = 0.5
+    if self.shapeA.static and self.shapeB.static then
+        staticA, staticB = 0, 0
+    elseif self.shapeA.static then
+        staticA, staticB = 0, 1
+    elseif self.shapeB.static then
+        staticA, staticB = 1, 0
+    end
+    self.shapeA.pos = self.shapeA.pos - self.mtv * staticA
+    self.shapeB.pos = self.shapeB.pos + self.mtv * staticB
 end
 
 function GetCollisionPoints(ShapeA, ShapeB)

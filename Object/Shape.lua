@@ -1,25 +1,21 @@
 local Object = require('Object.Object')
-local PHYSICSMANAGER = require('Object.PhysicsManager')
-local PM = PHYSICSMANAGER:getInstance()
-PHYSICSMANAGER = nil
 
 Shape = setmetatable({}, { __index = Object })
 Shape.__index = Shape
 function Shape:new(a, b)
     local obj = Object.new(self, a, b)
+
     --relative to pos
     obj.center = Vector:new(a,b)
     --reletive to pos
     obj.points = {}
-    --false - wont move on collision, true - moves full MTV
-    obj.static = false
-    table.insert(PM.objs, obj)
+
     return obj
 end
 
 function Shape:addPoint(x, y)
     table.insert(self.points, Vector:new(x, y))
-    self:updateCenter()
+    self:updateConstants()
 end
 
 function Shape:draw()
@@ -46,11 +42,7 @@ function Shape:update(delta)
    Object.update(self, delta)
 end
 
-function Shape:collide(ShapeB)
-    return Collide(self, ShapeB)
-end
-
-function Shape:updateCenter()
+function Shape:updateConstants()
     if #self.points == 0 then
         return
     end
@@ -104,3 +96,5 @@ function Shape:project(axis)
     end
     return min, max, axis * min, axis * max, axis * min - axis * max 
 end
+
+return Shape

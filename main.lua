@@ -1,7 +1,8 @@
 require('Math.Vector')
 
 require('Object.Object')
-require('Object.Shape')
+Shape = require('Object.Shape')
+PhysicsBody = require('Object.PhysicsBody')
 local OBJECTMANAGER = require('Object.Manager')
 OM = OBJECTMANAGER:getInstance()
 local PHYSICSMANAGER = require('Object.PhysicsManager')
@@ -20,11 +21,19 @@ function love.load()
     love.window.setMode(800, 600)
 
     --test
-    s1 = Shape:new(200,200)
+    -- Create a static floor
+    floor = PhysicsBody:new(400, 580, 1)
+    floor:addPoint(400, 0)
+    floor:addPoint(-400, 0)
+    floor:addPoint(-400, 20)
+    floor:addPoint(400, 20)
+    floor.static = true
+
+    s1 = PhysicsBody:new(200,200, 10)
     s1:addPoint(40,0)
     s1:addPoint(-40,0)
     s1:addPoint(0,40)
-    s2 = Shape:new(150,155)
+    s2 = PhysicsBody:new(150,155, 2)
     s2:addPoint(80,0)
     s2:addPoint(20,-60)
     s2:addPoint(-40,0)
@@ -47,11 +56,14 @@ function love.update(dt)
 
     --test
     --s2.rot = s2.rot + dt/2
-    s2.pos.x, s2.pos.y = love.mouse.getPosition()
-    --collision = Collide(s1,s2)
+    local mx, my = love.mouse.getPosition()
+    if love.mouse.isDown(1) then
+        s2:applyForce((Vector:new(mx,my) - (s2.center + s2.pos)):normalized() * 100)
+        s1:applyForceAtPoint(Vector:new(0,-1) * 100, Vector:new(mx,my))
+    end
 
     OM:update(dt)
-    PM:iterate()
+    PM:iterate(dt, 3)
 end
 
 function love.draw()
@@ -60,12 +72,7 @@ function love.draw()
     love.graphics.setLineWidth(1)
 
     --debug
-    -- if collision.isCollided then
-    --     love.graphics.setColor(1, 1, 1)
-    --     love.graphics.print("FPS: " .. love.timer.getFPS())
-    --     love.graphics.line(s1.pos.x, s1.pos.y, collision.mtv.x + s1.pos.x, collision.mtv.y + s1.pos.y)
-    --     love.graphics.circle("fill", collision.point.x,  collision.point.y, 5)
-    -- end
+    print(s1.vel:len())
 
     local curTime = love.timer.getTime()
     if NextTime <= curTime then

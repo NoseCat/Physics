@@ -14,8 +14,8 @@ function Object:new(a,b)
     newObj.accel  = Vector:new(0,0)
 
     newObj.rot = 0
-    --newObj.rotV = 0
-    --newObj.rotA = 0
+    newObj.rotVel = 0
+    newObj.rotAccel = 0
 
     table.insert(OM.objs, newObj)
 
@@ -35,6 +35,9 @@ end
 function Object:update(delta)
     self.vel = self.vel + self.accel * delta
     self.pos = self.pos + self.vel * delta
+
+    self.rotVel = self.rotVel + self.rotAccel * delta
+    self.rot = self.rot + self.rotVel * delta
 end
 
 function Object:draw()
