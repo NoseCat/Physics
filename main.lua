@@ -32,15 +32,16 @@ function love.load()
     s1:addPoint(40,0)
     s1:addPoint(-40,0)
     s1:addPoint(0,40)
-    s1.force = Vector:new(-500000, 0)
+    --s1.force = Vector:new(-500000, 0)
     s2 = PhysicsBody:new(150,200, 2)
     s2:addPoint(80,0)
     s2:addPoint(20,-60)
     s2:addPoint(-40,0)
     s2:addPoint(20,60)
     s2.rot = s2.rot + math.pi/4
+    s2.rotVel = 10
     s2.pos.y = s2.pos.y + 10
-    s2.force = Vector:new(500000, 0)
+    --s2.force = Vector:new(500000, 0)
     --s1.static = true
     NextTime = love.timer.getTime()
 end
@@ -59,8 +60,8 @@ function love.update(dt)
     --s2.rot = s2.rot + dt/2
     local mx, my = love.mouse.getPosition()
     if love.mouse.isDown(1) then
-        s2:applyForce((Vector:new(mx,my) - (s2.center + s2.pos)):normalized() * 100)
-        s1:applyForceAtPoint(Vector:new(0,-1) * 100, Vector:new(mx,my))
+        s2:applyForce((Vector:new(mx,my) - (s2.center + s2.pos)):normalized() * 5000)
+        s1:applyForce((Vector:new(mx,my) - (s1.center + s1.pos)):normalized() * 5000)
     end
 
     OM:update(dt)
@@ -71,9 +72,6 @@ function love.draw()
     love.graphics.clear(0.1, 0.1, 0.1)
     OM:draw()
     love.graphics.setLineWidth(1)
-
-    --debug
-    print(s1.vel:len())
 
     local curTime = love.timer.getTime()
     if NextTime <= curTime then

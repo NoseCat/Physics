@@ -60,6 +60,74 @@ function Collision:resolve()
     self.shapeB.pos = self.shapeB.pos + self.mtv * staticB
 end
 
+function Collision:applyBounce(delta)
+    local bounce = math.min(self.shapeA.bounce, self.shapeB.bounce)
+
+    local mtv = self.mtv:normalized()
+    local rA = self.point - (self.shapeA.pos + self.shapeA.center)
+    local rB = self.point - (self.shapeB.pos + self.shapeB.center)
+    local relVel = self.shapeB.vel - self.shapeA.vel + rA:perp() * self.shapeA.rotVel + rB:perp() * self.shapeB.rotVel
+    local velAlongNormal = relVel:dot(mtv)
+    if velAlongNormal > 0 then
+        return
+    end
+
+    local impulse = (1 + bounce) * velAlongNormal
+    impulse = impulse / (1/self.shapeA.mass + 1/self.shapeB.mass)
+
+    self.shapeA:applyForceAtPoint(mtv * (impulse / delta), self.point)
+    self.shapeB:applyForceAtPoint(mtv * -(impulse / delta), self.point)
+end
+
+-- function Collision:applyRotBounce(delta)
+--     local mtv = self.mtv:normalized():perp()
+--     local rA = self.point - (self.shapeA.pos + self.shapeA.center)
+--     local rB = self.point - (self.shapeB.pos + self.shapeB.center)
+--     --local relRotVel = self.shapeA.rotVel - self.shapeB.rotVel
+
+--     local tangentA = rA:perp()
+--     local tangentB = rB:perp()
+--     local relVel = tangentA * self.shapeA.rotVel + tangentB * self.shapeB.rotVel
+
+--     --local relVel = self.shapeB.vel - self.shapeA.vel + velocityDueToRotation
+--     --local velocityAlongNormal = velocityDueToRotation:cross(mtv)
+--     -- if velocityAlongNormal > 0 then
+--     --     return
+--     -- end
+
+--     local bounce = math.min(self.shapeA.bounce, self.shapeB.bounce)
+--     local j = (1 + bounce) * relVel:len()
+--     j = j /((rA:len2() / self.shapeA.inertia) + (rB:len2() / self.shapeB.inertia))
+
+--     local impulse = mtv * j
+--     self.shapeA:applyForceAtPoint(impulse / -delta, self.point)
+--     self.shapeB:applyForceAtPoint(impulse / delta, self.point)
+-- end
+
+function Collision:applyFriction(delta)
+    local mtv = self.mtv:normalized()
+    local rA = self.point - (self.shapeA.pos + self.shapeA.center)
+    local rB = self.point - (self.shapeB.pos + self.shapeB.center)
+    local relVel = (self.shapeB.vel - self.shapeA.vel) + rA:perp() * self.shapeA.rotVel + rB:perp() * self.shapeB.rotVel
+    local velAlongNormal = relVel:dot(mtv)
+    if velAlongNormal > 0 then
+        return
+    end
+    local friction = math.min(self.shapeA.friction, self.shapeB.friction)
+
+    local tangent = relVel - mtv * velAlongNormal
+    if tangent:len2() == 0 then
+        return
+    end
+    tangent = tangent:normalized()
+    local velAlongTangent = -relVel:dot(tangent)
+    local jt = friction * (velAlongTangent / 
+    1/self.shapeA.mass + 1/self.shapeB.mass + (rA:cross(tangent)^2 / self.shapeA.inertia) + (rB:cross(tangent)^2 / self.shapeB.inertia))
+
+    self.shapeA:applyForceAtPoint(tangent * (jt / -delta), self.point)
+    self.shapeB:applyForceAtPoint(tangent * (jt / delta), self.point)
+end
+
 function GetCollisionPoints(ShapeA, ShapeB)
     local SArealPoints = ShapeA:getRealPoints()
     local SBrealPoints = ShapeB:getRealPoints()

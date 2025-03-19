@@ -48,6 +48,11 @@ function Vector:cross(b)
     return self.x * b.y - self.y * b.x
 end
 
+-- (-y, x)
+function Vector:perp()
+    return Vector:new(-self.y, self.x)
+end
+
 --radians, clockwise
 function Vector:rotate(angle)
     return Vector.rotateAround(self, Vector:new(0,0), angle)

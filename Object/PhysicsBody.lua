@@ -17,8 +17,8 @@ function PhysicsBody:new(a, b, m)
     obj.inertia = 0
     obj.torque = 0
 
-    obj.bounce = 0.5
-    obj.friction = 0.5
+    obj.bounce = 0.8
+    obj.friction = 0.1
 
     table.insert(PM.objs, obj)
     return obj
@@ -80,6 +80,24 @@ function PhysicsBody:applyForceAtPoint(force, point)
     local r = point - (self.pos + self.center)
     local torque = r:cross(force)
     self:applyTorque(torque)
+end
+
+function PhysicsBody:getForceFromTorque(point)
+    local r = point - (self.pos + self.center)
+    local rLen = r:len()
+
+    if rLen == 0 then
+        return Vector:new(0, 0)
+    end
+
+    local forceMagnitude = math.abs(self.torque) / rLen
+
+    local sign = self.torque > 0 and 1 or -1
+    local forceDirection = Vector:new(-r.y, r.x):normalized() * sign
+
+    local force = forceDirection * forceMagnitude
+
+    return force
 end
 
 return PhysicsBody
