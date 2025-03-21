@@ -3,9 +3,9 @@
 -- local PM = PHYSICSMANAGER:getInstance()
 -- PHYSICSMANAGER = nil
 
-FreeFallAcceleration = 9.8 * 10 * 2
-Drag = 50
-RotDrag = 10000
+FreeFallAcceleration = 9.8 * 20 -- * 20 so it looks better
+Drag = 10
+RotDrag = 0.5
 
 local PhysicsManager = {}
 PhysicsManager.__index = PhysicsManager
@@ -44,12 +44,11 @@ function PhysicsManager:iterate(delta, iterations)
     for _, obj in ipairs(self.objs) do
         obj:applyForce(Vector:new(0, 1) * obj.mass * FreeFallAcceleration) --gravity
         obj:applyForce(obj.vel * -Drag * delta) --linear drag
-        obj:applyTorque(obj.rotVel * delta * -RotDrag) --angular drag
+        obj:applyTorque(obj.rotVel * -RotDrag * delta) --angular drag
     end
 
     for _, collision in ipairs(collisions) do
         collision:applyBounce(delta)
-        --collision:applyRotBounce(delta)
         collision:applyFriction(delta)
     end
 end

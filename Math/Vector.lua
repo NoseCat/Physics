@@ -68,7 +68,7 @@ function Vector:rotateAround(rotationPoint, angle)
 end
 
 function Vector:project(A, B)
-    local AB = B - A  
+    local AB = B - A
     local AP = self - A
 
     local ab2 = AB:len2()

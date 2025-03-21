@@ -15,7 +15,7 @@ function ObjectManager:getInstance()
 
     local sTone = setmetatable({}, ObjectManager)
     sTone.objs = {}
-    sTone.msgs = {}
+    --sTone.msgs = {}
     instance = sTone
 
     return instance

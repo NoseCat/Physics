@@ -32,7 +32,6 @@ function Log:getInstance()
         end
     end, "exit")
 
-    -- Register the exit handler for Love2D
     if love and love.event then
         love.quit = function()
             instance:add("Love.quit was called")
@@ -53,23 +52,23 @@ function Log:flush()
         for _, msg in ipairs(self.msgs) do
             self.file:write(msg .. "\n")
         end
-        self.file:flush() -- Ensure all data is written to the file
-        self.msgs = {}    -- Clear the queue
+        self.file:flush()
+        self.msgs = {}
     end
 end
 
 function Log:close()
     if self.file then
-        self:flush()  -- Flush any remaining messages
-        self.file:close()  -- Close the file
-        self.file = nil  -- Mark the file as closed
+        self:flush()
+        self.file:close()
+        self.file = nil
     end
 end
 
--- function Log:print()
---     for _, msg in ipairs(self.msgs) do
---         print(msg)
---     end
--- end
+function Log:print()
+    for _, msg in ipairs(self.msgs) do
+        print(msg)
+    end
+end
 
 return Log

@@ -21,7 +21,7 @@ function love.load()
 
     --test
     -- Create a static floor
-    floor = PhysicsBody:new(400, 580, 1)
+    floor = PhysicsBody:new(400, 580, 1000)
     floor:addPoint(400, 0)
     floor:addPoint(-400, 0)
     floor:addPoint(-400, 20)
@@ -42,12 +42,24 @@ function love.load()
     s2.rotVel = 10
     s2.pos.y = s2.pos.y + 10
     --s2.force = Vector:new(500000, 0)
-    --s1.static = true
+    s3 = PhysicsBody:new(600,200, 5)
+    s3:addPoint(-60,60)
+    s3:addPoint(-100,0)
+    s3:addPoint(-60,-60)
+    s3:addPoint(60,-60)
+    s3:addPoint(100,0)
+    s3:addPoint(60,60)
+
     NextTime = love.timer.getTime()
 end
 
 local logFlushAcc = 0
 local logFlushTime = 5
+
+local grabPoint = Vector:new(0,0)
+local grab = false
+local grabbed = nil
+local grabRotation = 0
 function love.update(dt)
     NextTime = NextTime + 1 / FPSLimit
 
@@ -57,11 +69,24 @@ function love.update(dt)
     end
 
     --test
-    --s2.rot = s2.rot + dt/2
     local mx, my = love.mouse.getPosition()
-    if love.mouse.isDown(1) then
-        s2:applyForce((Vector:new(mx,my) - (s2.center + s2.pos)):normalized() * 5000)
-        s1:applyForce((Vector:new(mx,my) - (s1.center + s1.pos)):normalized() * 5000)
+    mouse = Vector:new(mx,my)
+    for _, obj in ipairs(PM.objs) do
+        if obj:containsPoint(mouse) and love.mouse.isDown(1) and not grab then
+            grabPoint = mouse - (obj.pos + obj.center)
+            grabRotation = obj.rot
+            grab = true
+            grabbed = obj
+            break
+        end
+    end
+    if not love.mouse.isDown(1) then
+        grab = false
+        grabRotation = 0
+        grabbed = nil
+    end
+    if grab and grabbed and love.mouse.isDown(1) then
+        grabbed:applyForceAtPoint((mouse - (grabbed.pos + grabbed.center + grabPoint:rotate(grabbed.rot - grabRotation))) * 50, grabbed.pos + grabbed.center + grabPoint:rotate(grabbed.rot - grabRotation))
     end
 
     OM:update(dt)
@@ -72,6 +97,10 @@ function love.draw()
     love.graphics.clear(0.1, 0.1, 0.1)
     OM:draw()
     love.graphics.setLineWidth(1)
+    if love.mouse.isDown(1) and grab and grabbed then
+        local point = grabbed.pos + grabbed.center + grabPoint:rotate(grabbed.rot - grabRotation)
+        love.graphics.line(point.x, point.y, mouse.x, mouse.y)
+    end
 
     local curTime = love.timer.getTime()
     if NextTime <= curTime then

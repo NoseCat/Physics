@@ -50,10 +50,6 @@ function Shape:updateConstants()
         self.center = self.points[1]
         return
     end
-    if #self.points == 2 then
-        self.center = (self.points[1] + self.points[2])/2
-        return
-    end
 
     local sumPoints = Vector:new(0,0)
     for _, point in ipairs(self.points) do
@@ -94,7 +90,41 @@ function Shape:project(axis)
             max = proj
         end
     end
-    return min, max, axis * min, axis * max, axis * min - axis * max 
+    return min, max, axis * min, axis * max, axis * min - axis * max
+end
+
+function Shape:containsPoint(point)
+    local realPoints = self:getRealPoints()
+    local x, y = point.x, point.y
+    local inside = false
+
+    -- Ray-casting algorithm
+    for i = 1, #realPoints do
+        local j = i % #realPoints + 1
+        local xi, yi = realPoints[i].x, realPoints[i].y
+        local xj, yj = realPoints[j].x, realPoints[j].y
+
+        -- Check if the point is on an edge (optional, depending on your use case)
+        if (xi == xj and xi == x and y > math.min(yi, yj) and y <= math.max(yi, yj)) or
+           (yi == yj and yi == y and x > math.min(xi, xj) and x <= math.max(xi, xj)) then
+            return true
+        end
+
+        -- Check if the ray intersects with the edge
+        if yi > yj then
+            xi, xj = xj, xi
+            yi, yj = yj, yi
+        end
+
+        if y > yi and y <= yj then
+            local slope = (xj - xi) / (yj - yi)
+            if x <= xi + slope * (y - yi) then
+                inside = not inside
+            end
+        end
+    end
+
+    return inside
 end
 
 return Shape

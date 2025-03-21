@@ -22,16 +22,6 @@ function Object:new(a,b)
     return newObj
 end
 
--- function object:setVelocity(x,y)
---     self.vel.x = x
---     self.vel.y = y
--- end
-
--- function object:setAcceleration(x,y)
---     self.vel.x = x
---     self.vel.y = y
--- end
-
 function Object:update(delta)
     self.vel = self.vel + self.accel * delta
     self.pos = self.pos + self.vel * delta

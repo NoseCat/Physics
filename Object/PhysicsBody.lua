@@ -10,15 +10,15 @@ function PhysicsBody:new(a, b, m)
 
     local obj = Shape.new(self, a, b)
 
-    obj.static = false
+    obj.static = false --huge mass is recomended for proper bounce TODO: frcition should not acount for static object mass
 
     obj.mass = m
     obj.force = Vector:new(0,0)
     obj.inertia = 0
     obj.torque = 0
 
-    obj.bounce = 0.8
-    obj.friction = 0.1
+    obj.bounce = 0.5
+    obj.friction = 0.3
 
     table.insert(PM.objs, obj)
     return obj
