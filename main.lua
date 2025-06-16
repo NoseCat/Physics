@@ -8,6 +8,8 @@ OM = OBJECTMANAGER:getInstance()
 local PHYSICSMANAGER = require('Object.PhysicsManager')
 local PM = PHYSICSMANAGER:getInstance()
 
+SoftBody = require('Object.SoftBody')
+
 require('Interaction.Collision')
 
 local LOG = require('Debug.Log')
@@ -42,14 +44,15 @@ function love.load()
     s2.rotVel = 10
     s2.pos.y = s2.pos.y + 10
     --s2.force = Vector:new(500000, 0)
-    s3 = PhysicsBody:new(600,200, 5)
-    s3:addPoint(-60,60)
-    s3:addPoint(-100,0)
-    s3:addPoint(-60,-60)
-    s3:addPoint(60,-60)
-    s3:addPoint(100,0)
-    s3:addPoint(60,60)
-
+    s3 = SoftBody:new(600,200, 5, 1)
+    local pointCount = 19
+    local radius = 80
+    for i = 0, pointCount - 1 do
+        local angle = (i / pointCount) * math.pi * 2
+        local x = math.cos(angle) * radius
+        local y = math.sin(angle) * radius
+        s3:addPoint(x, y)
+    end
     NextTime = love.timer.getTime()
 end
 
@@ -71,23 +74,38 @@ function love.update(dt)
     --test
     local mx, my = love.mouse.getPosition()
     mouse = Vector:new(mx,my)
-    for _, obj in ipairs(PM.objs) do
-        if obj:containsPoint(mouse) and love.mouse.isDown(1) and not grab then
-            grabPoint = mouse - (obj.pos + obj.center)
-            grabRotation = obj.rot
-            grab = true
-            grabbed = obj
-            break
-        end
+
+    if s3:containsPoint(mouse) and love.mouse.isDown(1) and not grab then
+        grabPoint = mouse - s3.points[1]
+        grab = true
+        grabbed = s3
     end
     if not love.mouse.isDown(1) then
         grab = false
-        grabRotation = 0
         grabbed = nil
     end
     if grab and grabbed and love.mouse.isDown(1) then
-        grabbed:applyForceAtPoint((mouse - (grabbed.pos + grabbed.center + grabPoint:rotate(grabbed.rot - grabRotation))) * 50, grabbed.pos + grabbed.center + grabPoint:rotate(grabbed.rot - grabRotation))
+        grabbed:applyForceAtPoint((mouse - (s3.points[1] + grabPoint)) * 25, s3.points[1] + grabPoint)
     end
+
+
+    -- for _, obj in ipairs(PM.objs) do
+    --     if obj:containsPoint(mouse) and love.mouse.isDown(1) and not grab then
+    --         grabPoint = mouse - (obj.pos + obj.center)
+    --         grabRotation = obj.rot
+    --         grab = true
+    --         grabbed = obj
+    --         break
+    --     end
+    -- end
+    -- if not love.mouse.isDown(1) then
+    --     grab = false
+    --     grabRotation = 0
+    --     grabbed = nil
+    -- end
+    -- if grab and grabbed and love.mouse.isDown(1) then
+    --     grabbed:applyForceAtPoint((mouse - (grabbed.pos + grabbed.center + grabPoint:rotate(grabbed.rot - grabRotation))) * 50, grabbed.pos + grabbed.center + grabPoint:rotate(grabbed.rot - grabRotation))
+    -- end
 
     OM:update(dt)
     PM:iterate(dt, 3)
@@ -96,9 +114,15 @@ end
 function love.draw()
     love.graphics.clear(0.1, 0.1, 0.1)
     OM:draw()
+
+    -- love.graphics.setLineWidth(1)
+    -- if love.mouse.isDown(1) and grab and grabbed then
+    --     local point = grabbed.pos + grabbed.center + grabPoint:rotate(grabbed.rot - grabRotation)
+    --     love.graphics.line(point.x, point.y, mouse.x, mouse.y)
+    -- end
     love.graphics.setLineWidth(1)
     if love.mouse.isDown(1) and grab and grabbed then
-        local point = grabbed.pos + grabbed.center + grabPoint:rotate(grabbed.rot - grabRotation)
+        local point = s3.points[1] + grabPoint
         love.graphics.line(point.x, point.y, mouse.x, mouse.y)
     end
 

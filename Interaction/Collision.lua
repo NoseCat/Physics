@@ -25,24 +25,24 @@ function Collide(ShapeA, ShapeB)
 
     local isCollided, MTV = SATCollide(ShapeA, ShapeB)
     collision.isCollided = isCollided
+    if not (isCollided or MTV) then
+        return collision
+    end
 
-    if isCollided and MTV then
-        local colPoints = collision:getPoints()
+    local minus = -1
+    if MTV:dot((ShapeA.pos + ShapeA.center) - (ShapeB.pos + ShapeB.center)) < 0 then
+        minus = 1
+    end
+    MTV = MTV * minus -- fix MTV so it always points from B to A
+    collision.mtv = MTV
 
-        local minus = -1
-        if MTV:dot((ShapeA.pos + ShapeA.center) - (ShapeB.pos + ShapeB.center)) < 0 then
-            minus = 1
-        end
-        MTV = MTV * minus -- fix MTV so it always points from B to A
-        collision.mtv = MTV
-
-        local sumColPoints = Vector:new(0,0)
-        for _, point in ipairs(colPoints) do
-            sumColPoints = sumColPoints + point
-        end
-        if #colPoints > 0 then
-            collision.point = sumColPoints / #colPoints
-        end
+    local colPoints = collision:getPoints()
+    local sumColPoints = Vector:new(0, 0)
+    for _, point in ipairs(colPoints) do
+        sumColPoints = sumColPoints + point
+    end
+    if #colPoints > 0 then
+        collision.point = sumColPoints / #colPoints
     end
     return collision
 end

@@ -82,22 +82,22 @@ function PhysicsBody:applyForceAtPoint(force, point)
     self:applyTorque(torque)
 end
 
-function PhysicsBody:getForceFromTorque(point)
-    local r = point - (self.pos + self.center)
-    local rLen = r:len()
+-- function PhysicsBody:getForceFromTorque(point)
+--     local r = point - (self.pos + self.center)
+--     local rLen = r:len()
 
-    if rLen == 0 then
-        return Vector:new(0, 0)
-    end
+--     if rLen == 0 then
+--         return Vector:new(0, 0)
+--     end
 
-    local forceMagnitude = math.abs(self.torque) / rLen
+--     local forceMagnitude = math.abs(self.torque) / rLen
 
-    local sign = self.torque > 0 and 1 or -1
-    local forceDirection = Vector:new(-r.y, r.x):normalized() * sign
+--     local sign = self.torque > 0 and 1 or -1
+--     local forceDirection = Vector:new(-r.y, r.x):normalized() * sign
 
-    local force = forceDirection * forceMagnitude
+--     local force = forceDirection * forceMagnitude
 
-    return force
-end
+--     return force
+-- end
 
 return PhysicsBody

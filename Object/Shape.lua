@@ -46,10 +46,6 @@ function Shape:updateConstants()
     if #self.points == 0 then
         return
     end
-    if #self.points == 1 then
-        self.center = self.points[1]
-        return
-    end
 
     local sumPoints = Vector:new(0,0)
     for _, point in ipairs(self.points) do
@@ -125,6 +121,18 @@ function Shape:containsPoint(point)
     end
 
     return inside
+end
+
+function Shape:getArea()
+    local sum = 0
+    for i = 1, #self.points do
+        local j = i + 1
+        if j > #self.points then j = 1 end
+
+        sum = sum + self.points[i].x * self.points[j].y - self.points[j].x * self.points[i].y
+    end
+
+    return math.abs(sum) / 2
 end
 
 return Shape
