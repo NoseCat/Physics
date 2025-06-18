@@ -13,11 +13,6 @@ function Shape:new(a, b)
     return obj
 end
 
-function Shape:addPoint(x, y)
-    table.insert(self.points, Vector:new(x, y))
-    self:updateConstants()
-end
-
 function Shape:draw()
     Object.draw(self)
     love.graphics.setColor({1,0,0})
@@ -42,6 +37,11 @@ function Shape:update(delta)
    Object.update(self, delta)
 end
 
+function Shape:addPoint(x, y)
+    table.insert(self.points, Vector:new(x, y))
+    self:updateConstants()
+end
+
 function Shape:updateConstants()
     if #self.points == 0 then
         return
@@ -54,8 +54,16 @@ function Shape:updateConstants()
     self.center = sumPoints / #self.points
 end
 
+local function getRotatedPoints(self)
+    local points = {}
+    for _, point in ipairs(self.points) do
+        table.insert(points, point:rotateAround(self.center, self.rot))
+    end
+    return points
+end
+
 function Shape:getRealPoints()
-    local rotPoints = self:getRotatedPoints()
+    local rotPoints = getRotatedPoints(self)
     local points = {}
     for _, point in ipairs(rotPoints) do
         table.insert(points, point + self.pos)
@@ -63,12 +71,8 @@ function Shape:getRealPoints()
     return points
 end
 
-function Shape:getRotatedPoints()
-    local points = {}
-    for _, point in ipairs(self.points) do
-        table.insert(points, point:rotateAround(self.center, self.rot))
-    end
-    return points
+function Shape:getRealCenter()
+    return self.center + self.pos
 end
 
 function Shape:project(axis)
@@ -133,6 +137,10 @@ function Shape:getArea()
     end
 
     return math.abs(sum) / 2
+end
+
+function Shape:print()
+    print("quirky shape")
 end
 
 return Shape

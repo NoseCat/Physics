@@ -1,3 +1,8 @@
+
+--WARNING
+--all this code is messy, needs adjustments and could use some cleaning
+--thread lightly
+
 require('Math.Vector')
 
 require('Object.Object')
@@ -22,7 +27,6 @@ function love.load()
     love.window.setMode(800, 600)
 
     --test
-    -- Create a static floor
     floor = PhysicsBody:new(400, 580, 1000)
     floor:addPoint(400, 0)
     floor:addPoint(-400, 0)
@@ -30,7 +34,21 @@ function love.load()
     floor:addPoint(400, 20)
     floor.static = true
 
-    s1 = PhysicsBody:new(400,200, 10)
+    leftWall = PhysicsBody:new(-10, 300, 1000)
+    leftWall:addPoint(0, -300)
+    leftWall:addPoint(20, -300)
+    leftWall:addPoint(20, 300)
+    leftWall:addPoint(0, 300)
+    leftWall.static = true
+
+    rightWall = PhysicsBody:new(790, 300, 1000)
+    rightWall:addPoint(0, -300)
+    rightWall:addPoint(20, -300)
+    rightWall:addPoint(20, 280)
+    rightWall:addPoint(0, 280)
+    rightWall.static = true
+
+    s1 = PhysicsBody:new(400,200, 5)
     s1:addPoint(40,0)
     s1:addPoint(-40,0)
     s1:addPoint(0,40)
@@ -44,8 +62,8 @@ function love.load()
     s2.rotVel = 10
     s2.pos.y = s2.pos.y + 10
     --s2.force = Vector:new(500000, 0)
-    s3 = SoftBody:new(600,200, 5, 1)
-    local pointCount = 19
+    s3 = SoftBody:new(600,200, 50, 1)
+    local pointCount = 50
     local radius = 80
     for i = 0, pointCount - 1 do
         local angle = (i / pointCount) * math.pi * 2
@@ -75,37 +93,23 @@ function love.update(dt)
     local mx, my = love.mouse.getPosition()
     mouse = Vector:new(mx,my)
 
-    if s3:containsPoint(mouse) and love.mouse.isDown(1) and not grab then
-        grabPoint = mouse - s3.points[1]
-        grab = true
-        grabbed = s3
+    for _, obj in ipairs(PM.objs) do
+        if obj:containsPoint(mouse) and love.mouse.isDown(1) and not grab then
+            grabPoint = mouse - obj:getRealCenter()
+            grabRotation = obj.rot
+            grab = true
+            grabbed = obj
+            break
+        end
     end
     if not love.mouse.isDown(1) then
         grab = false
+        grabRotation = 0
         grabbed = nil
     end
     if grab and grabbed and love.mouse.isDown(1) then
-        grabbed:applyForceAtPoint((mouse - (s3.points[1] + grabPoint)) * 25, s3.points[1] + grabPoint)
+        grabbed:applyForceAtPoint((mouse - (grabbed:getRealCenter() + grabPoint:rotate(grabbed.rot - grabRotation))) * 50, grabbed:getRealCenter() + grabPoint:rotate(grabbed.rot - grabRotation))
     end
-
-
-    -- for _, obj in ipairs(PM.objs) do
-    --     if obj:containsPoint(mouse) and love.mouse.isDown(1) and not grab then
-    --         grabPoint = mouse - (obj.pos + obj.center)
-    --         grabRotation = obj.rot
-    --         grab = true
-    --         grabbed = obj
-    --         break
-    --     end
-    -- end
-    -- if not love.mouse.isDown(1) then
-    --     grab = false
-    --     grabRotation = 0
-    --     grabbed = nil
-    -- end
-    -- if grab and grabbed and love.mouse.isDown(1) then
-    --     grabbed:applyForceAtPoint((mouse - (grabbed.pos + grabbed.center + grabPoint:rotate(grabbed.rot - grabRotation))) * 50, grabbed.pos + grabbed.center + grabPoint:rotate(grabbed.rot - grabRotation))
-    -- end
 
     OM:update(dt)
     PM:iterate(dt, 3)
@@ -115,14 +119,9 @@ function love.draw()
     love.graphics.clear(0.1, 0.1, 0.1)
     OM:draw()
 
-    -- love.graphics.setLineWidth(1)
-    -- if love.mouse.isDown(1) and grab and grabbed then
-    --     local point = grabbed.pos + grabbed.center + grabPoint:rotate(grabbed.rot - grabRotation)
-    --     love.graphics.line(point.x, point.y, mouse.x, mouse.y)
-    -- end
     love.graphics.setLineWidth(1)
     if love.mouse.isDown(1) and grab and grabbed then
-        local point = s3.points[1] + grabPoint
+        local point = grabbed:getRealCenter() + grabPoint:rotate(grabbed.rot - grabRotation)
         love.graphics.line(point.x, point.y, mouse.x, mouse.y)
     end
 

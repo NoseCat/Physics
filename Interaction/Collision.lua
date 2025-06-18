@@ -30,7 +30,7 @@ function Collide(ShapeA, ShapeB)
     end
 
     local minus = -1
-    if MTV:dot((ShapeA.pos + ShapeA.center) - (ShapeB.pos + ShapeB.center)) < 0 then
+    if MTV:dot(ShapeA:getRealCenter() - ShapeB:getRealCenter()) < 0 then
         minus = 1
     end
     MTV = MTV * minus -- fix MTV so it always points from B to A
@@ -82,8 +82,8 @@ function Collision:resolve()
     elseif self.shapeB.static then
         staticA, staticB = 1, 0
     end
-    self.shapeA.pos = self.shapeA.pos - self.mtv * staticA
-    self.shapeB.pos = self.shapeB.pos + self.mtv * staticB
+    self.shapeA:move(self.mtv * -1 * staticA, self.point)
+    self.shapeB:move(self.mtv * staticB, self.point)
 end
 
 --applies impulse parralel to mtv
@@ -91,8 +91,8 @@ function Collision:applyBounce(delta)
     local bounce = math.min(self.shapeA.bounce, self.shapeB.bounce)
 
     local mtv = self.mtv:normalized()
-    local rA = self.point - (self.shapeA.pos + self.shapeA.center)
-    local rB = self.point - (self.shapeB.pos + self.shapeB.center)
+    local rA = self.point - self.shapeA:getRealCenter()
+    local rB = self.point - self.shapeB:getRealCenter()
     --relvel = relative Linear velocity + relative Angular velocity 
     local relVel = (self.shapeB.vel - self.shapeA.vel) - rA:perp() * self.shapeA.rotVel + rB:perp() * self.shapeB.rotVel
     local velAlongNormal = relVel:dot(mtv)
@@ -104,7 +104,7 @@ function Collision:applyBounce(delta)
     impulse = impulse / (1/self.shapeA.mass + 1/self.shapeB.mass + (rA:cross(mtv)^2 / self.shapeA.inertia) + (rB:cross(mtv)^2 / self.shapeB.inertia))
 
     self.shapeA:applyForceAtPoint(mtv * (impulse / delta), self.point)
-    self.shapeB:applyForceAtPoint(mtv * -(impulse / delta), self.point)
+    self.shapeB:applyForceAtPoint(mtv * (impulse / -delta), self.point)
 end
 
 --applies impulse perpendicular to mtv (friction)
@@ -112,8 +112,8 @@ function Collision:applyFriction(delta)
     local friction = math.min(self.shapeA.friction, self.shapeB.friction)
 
     local mtv = self.mtv:normalized()
-    local rA = self.point - (self.shapeA.pos + self.shapeA.center)
-    local rB = self.point - (self.shapeB.pos + self.shapeB.center)
+    local rA = self.point - self.shapeA:getRealCenter()
+    local rB = self.point - self.shapeB:getRealCenter()
     --relvel = relative Linear velocity + relative Angular velocity 
     local relVel = (self.shapeB.vel - self.shapeA.vel) - rA:perp() * self.shapeA.rotVel + rB:perp() * self.shapeB.rotVel
     local velAlongNormal = relVel:dot(mtv)

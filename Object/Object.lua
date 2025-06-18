@@ -42,6 +42,10 @@ function Object:kill()
     self.live = false
 end
 
+function Object:move(dir)
+    self.pos = self.pos + dir
+end
+
 function Object:isInstanceOf(class)
     local mt = getmetatable(self)
     while mt do
@@ -51,6 +55,10 @@ function Object:isInstanceOf(class)
         mt = getmetatable(mt)
     end
     return false
+end
+
+function Object:print()
+    print("normal object")
 end
 
 return Object

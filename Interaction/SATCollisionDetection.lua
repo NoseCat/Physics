@@ -8,7 +8,7 @@ require('Object.Shape')
 function SATCollide(ShapeA, ShapeB)
     --SAT needs to check all normals of both shapes' edges
     local normals = {}
-    local function getNormals(points, shapeCenter)
+    local function getNormals(points)
         for i = 1, #points do
             local j = i + 1
             if j > #points then j = 1 end
@@ -18,8 +18,8 @@ function SATCollide(ShapeA, ShapeB)
             table.insert(normals, normal)
         end
     end
-    getNormals(ShapeA:getRotatedPoints(), ShapeA.center)
-    getNormals(ShapeB:getRotatedPoints(), ShapeB.center)
+    getNormals(ShapeA:getRealPoints())
+    getNormals(ShapeB:getRealPoints())
 
     local smallestLength = math.huge
     local MTVaxis = Vector:new(0, 0)

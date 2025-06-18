@@ -100,4 +100,8 @@ end
 --     return force
 -- end
 
+function PhysicsBody:print()
+    print("PhysicsBody")
+end
+
 return PhysicsBody
