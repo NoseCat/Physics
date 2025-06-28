@@ -10,7 +10,8 @@ function PhysicsBody:new(a, b, m)
 
     local obj = Shape.new(self, a, b)
 
-    obj.static = false --huge mass is recomended for proper bounce TODO: frcition should not acount for static object mass
+    obj.static = false --TODO: frcition should not acount for static object mass
+    obj.bboxSize = 0
 
     obj.mass = m
     obj.force = Vector:new(0,0)
@@ -51,6 +52,8 @@ function PhysicsBody:updateConstants()
     local k = 0.5
     L = maxDistance
     self.inertia = k * self.mass * L^2
+
+    self.bboxSize = maxDistance * 2
 end
 
 function PhysicsBody:collide(PhysicsBodyB)
@@ -82,6 +85,10 @@ function PhysicsBody:applyForceAtPoint(force, point)
     self:applyTorque(torque)
 end
 
+function Object:unCollide(dir)
+    self.pos = self.pos + dir
+end
+
 -- function PhysicsBody:getForceFromTorque(point)
 --     local r = point - (self.pos + self.center)
 --     local rLen = r:len()
@@ -102,6 +109,10 @@ end
 
 function PhysicsBody:print()
     print("PhysicsBody")
+end
+
+function PhysicsBody:getBoundingBox()
+    return self.bboxSize
 end
 
 return PhysicsBody

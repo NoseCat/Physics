@@ -27,21 +27,21 @@ function love.load()
     love.window.setMode(800, 600)
 
     --test
-    floor = PhysicsBody:new(400, 580, 1000)
+    floor = PhysicsBody:new(400, 580, 10)
     floor:addPoint(400, 0)
     floor:addPoint(-400, 0)
     floor:addPoint(-400, 20)
     floor:addPoint(400, 20)
     floor.static = true
 
-    leftWall = PhysicsBody:new(-10, 300, 1000)
+    leftWall = PhysicsBody:new(-10, 300, 10)
     leftWall:addPoint(0, -300)
     leftWall:addPoint(20, -300)
     leftWall:addPoint(20, 300)
     leftWall:addPoint(0, 300)
     leftWall.static = true
 
-    rightWall = PhysicsBody:new(790, 300, 1000)
+    rightWall = PhysicsBody:new(790, 300, 10)
     rightWall:addPoint(0, -300)
     rightWall:addPoint(20, -300)
     rightWall:addPoint(20, 280)
@@ -62,8 +62,14 @@ function love.load()
     s2.rotVel = 10
     s2.pos.y = s2.pos.y + 10
     --s2.force = Vector:new(500000, 0)
+    cube = PhysicsBody:new(380, 460, 10)
+    cube:addPoint(-40, -40)
+    cube:addPoint(40, -40)
+    cube:addPoint(40, 40)
+    cube:addPoint(-40, 40)
+    cube.static = true
     s3 = SoftBody:new(600,200, 50, 1)
-    local pointCount = 50
+    local pointCount = 35
     local radius = 80
     for i = 0, pointCount - 1 do
         local angle = (i / pointCount) * math.pi * 2
@@ -71,6 +77,15 @@ function love.load()
         local y = math.sin(angle) * radius
         s3:addPoint(x, y)
     end
+    s4 = SoftBody:new(600,0, 50, 1)
+    for i = 0, pointCount - 1 do
+        local angle = (i / pointCount) * math.pi * 2
+        local x = math.cos(angle) * radius
+        local y = math.sin(angle) * radius
+        s4:addPoint(x, y)
+    end
+
+
     NextTime = love.timer.getTime()
 end
 

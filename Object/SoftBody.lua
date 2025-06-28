@@ -18,10 +18,12 @@ function SoftBody:new(a, b, m, k)
     obj.restArea = 0
     obj.stiffness = k
     obj.contourTension = 5
-    obj.internalPressure = 10
+    obj.internalPressure = 3
 
     return obj
 end
+
+local ChaikinPasses = 1
 
 --=====================================================================
 --redifinig methods from PhysicsObject tree because different structure
@@ -86,7 +88,7 @@ local function getMinRestLen(self)
 end
 
 function SoftBody:applyForceAtPoint(force, point)
-    radius = getMinRestLen(self) * 1.1
+    local radius = getMinRestLen(self) * 1.1
 
     local totalWeight = 0
     local weights = {}
@@ -165,19 +167,62 @@ local function getVel(self)
     return totalMomentum / #self.points
 end
 
---also needs to resive area of collision
-function SoftBody:move(dir, point)
+function SoftBody:unCollide(dir, collision)
     -- for index = 1, #self.points do
     --     self.points[index] = self.points[index] + dir
     -- end
+
+    local area = {}
+    if #collision.points > 1 then
+        local projections = {}
+        for index = 1, #collision.points do
+            table.insert(projections, index, dir:normalized():perp() * (collision.points[index] - collision.point):dot(dir:normalized():perp()))
+        end
+
+        local max_dist = -math.huge
+        for i = 1, #projections do
+            for j = i+1, #projections do
+                local dist = (projections[i] - projections[j]):len()
+                if dist > max_dist then
+                    max_dist = dist
+                    -- area.max = collision.points[i]
+                    -- area.min = collision.points[j]
+                    area.max = collision.point + projections[i]
+                    area.min = collision.point + projections[j]
+                end
+            end
+        end
+    end
+
+    if not area.max then
+        area.max = dir:normalized():perp() * math.huge
+    end
+    if not area.min then
+        area.min = dir:normalized():perp() * -math.huge
+    end
+
+    -- if (area.max - area.min):len() < getMinRestLen(self) then
+    --     area.min = collision.point - dir:perp():normalized() * getMinRestLen(self)/2
+    --     area.max = collision.point + dir:perp():normalized() * getMinRestLen(self)/2
+    -- end
+
     for index = 1, #self.points do
-        local len = dir:normalized() * (self.points[index] - point):dot(dir:normalized())
+        local len = dir:normalized() * (self.points[index] - collision.point):dot(dir:normalized())
         if len:len() > dir:len() then
             goto continue
         end
 
-        local toPoint = dir:normalized() * (point - self.points[index]):dot(dir:normalized())
+        local proj = collision.point + dir:perp():normalized() * (self.points[index] - collision.point):dot(dir:perp():normalized())
+        local areaLen = (area.max - area.min):len()
+        if (proj - area.max):len() > areaLen or (proj - area.min):len() > areaLen then
+            goto continue
+        end
+
+        local toPoint = dir:normalized() * (collision.point - self.points[index]):dot(dir:normalized())
         self.points[index] = self.points[index] + toPoint + dir
+        --this is how you move points without impacting velocity
+        local toPointPrev = dir:normalized() * (collision.point - self.pointsPrev[index]):dot(dir:normalized())
+        self.pointsPrev[index] = self.pointsPrev[index] + toPointPrev + dir
         ::continue::
     end
 end
@@ -236,9 +281,31 @@ function SoftBody:draw()
         return
     end
 
+    --Chaikin smoothing
+    local CHpoints = {}
+    for _, point in ipairs(self.points) do
+        table.insert(CHpoints, point)
+    end
+
+    for i = 1, ChaikinPasses, 1 do
+        local tempPoints = {}
+        for index = 1, #CHpoints do
+            local nextIdx = (index % #CHpoints) + 1
+
+            local point = CHpoints[index] + (CHpoints[nextIdx] - CHpoints[index]) * 0.25
+            table.insert(tempPoints, point)
+            point = point + (CHpoints[nextIdx] - CHpoints[index]) * 0.5
+            table.insert(tempPoints, point)
+        end
+        CHpoints = {}
+        for _, point in ipairs(tempPoints) do
+            table.insert(CHpoints, point)
+        end
+    end
+
     love.graphics.setColor(0.5, 0.7, 0.7)
     local points = {}
-    for _, point in ipairs(self.points) do
+    for _, point in ipairs(CHpoints) do
         table.insert(points, point.x)
         table.insert(points, point.y)
     end

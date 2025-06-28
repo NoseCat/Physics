@@ -42,10 +42,6 @@ function Object:kill()
     self.live = false
 end
 
-function Object:move(dir)
-    self.pos = self.pos + dir
-end
-
 function Object:isInstanceOf(class)
     local mt = getmetatable(self)
     while mt do

@@ -13,6 +13,7 @@ function Collision:new(shapeA, shapeB)
     instance.shapeA = shapeA
     instance.shapeB = shapeB
 
+    instance.points = {} --all collision points
     instance.point = Vector:new(0,0) --collision point
     instance.mtv = Vector:new(0,0) --minumum translation vector, points from B to A
 
@@ -36,13 +37,13 @@ function Collide(ShapeA, ShapeB)
     MTV = MTV * minus -- fix MTV so it always points from B to A
     collision.mtv = MTV
 
-    local colPoints = collision:getPoints()
+    collision.points = collision:getPoints()
     local sumColPoints = Vector:new(0, 0)
-    for _, point in ipairs(colPoints) do
+    for _, point in ipairs(collision.points) do
         sumColPoints = sumColPoints + point
     end
-    if #colPoints > 0 then
-        collision.point = sumColPoints / #colPoints
+    if #collision.points > 0 then
+        collision.point = sumColPoints / #collision.points
     end
     return collision
 end
@@ -73,6 +74,7 @@ function Collision:resolve()
     if not self.isCollided then
         return
     end
+    --should be staticA = massA / (massA + massB)
     local staticA = 0.5
     local staticB = 0.5
     if self.shapeA.static and self.shapeB.static then
@@ -82,8 +84,8 @@ function Collision:resolve()
     elseif self.shapeB.static then
         staticA, staticB = 1, 0
     end
-    self.shapeA:move(self.mtv * -1 * staticA, self.point)
-    self.shapeB:move(self.mtv * staticB, self.point)
+    self.shapeA:unCollide(self.mtv * -1 * staticA, self)
+    self.shapeB:unCollide(self.mtv * staticB, self)
 end
 
 --applies impulse parralel to mtv
