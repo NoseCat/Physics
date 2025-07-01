@@ -25,21 +25,65 @@ function Shape:draw()
     love.graphics.setColor(0.7, 0.7, 0.7)
     local realPoints = self:getRealPoints()
     local points = {}
-    for _, point in ipairs(realPoints) do
+    for index, point in ipairs(realPoints) do
+        --love.graphics.circle("line", point.x, point.y, 5)
+        love.graphics.print(index, point.x, point.y)
         table.insert(points, point.x)
         table.insert(points, point.y)
     end
     love.graphics.setLineWidth(3)
     love.graphics.polygon("line", points)
+
+    -- local triangles = self:triangulate()
+    -- for _, triangle in ipairs(triangles) do
+    --     love.graphics.setColor(0.7, 0, 0)
+    --     love.graphics.setLineWidth(1)
+    --     local tpoints = {}
+    --     for _, point in ipairs(triangle:getRealPoints()) do
+    --         table.insert(tpoints, point.x)
+    --         table.insert(tpoints, point.y)
+    --     end
+    --     love.graphics.polygon("line", tpoints)
+    --    -- triangle.kill = true
+    -- end
+    -- love.graphics.setLineWidth(1)
+    -- love.graphics.setColor(1, 0, 0)
+    -- local triangles = self:triangulate()
+    -- for _, triangle in ipairs(triangles) do
+    --     --love.graphics.polygon("line", triangle)
+    -- end
 end
 
 function Shape:update(delta)
-   Object.update(self, delta)
+    Object.update(self, delta)
 end
 
 function Shape:addPoint(x, y)
     table.insert(self.points, Vector:new(x, y))
     self:updateConstants()
+end
+
+local function findIntersections(points)
+    if #points <= 3 then
+        return {}
+    end
+    local intersections = {}
+    for i = 1, #points, 1 do
+        local iNext = (i % #points) + 1
+        for j = i + 2, #points, 1 do
+            local jNext = (j % #points) + 1
+
+            if j == iNext or jNext == i then
+                goto continue
+            end
+            local intersect = SegmentIntersect(points[i], points[iNext], points[j], points[jNext])
+            if intersect then
+                table.insert(intersections, intersect)
+            end
+            ::continue::
+        end
+    end
+    return intersections
 end
 
 function Shape:updateConstants()
@@ -75,7 +119,7 @@ function Shape:getRealCenter()
     return self.center + self.pos
 end
 
-function Shape:project(axis)
+local function project(self, axis)
     local realPoints = self:getRealPoints()
     axis = axis:normalized()
 
@@ -141,6 +185,28 @@ end
 
 function Shape:print()
     print("quirky shape")
+end
+
+function Shape:triangulate()
+    local Rpoints = self:getRealPoints()
+    local points = {}
+    for _, point in ipairs(Rpoints) do
+        table.insert(points, point.x)
+        table.insert(points, point.y)
+    end
+    if love.math.isConvex(points) or #findIntersections(Rpoints) > 0 then
+        return {Rpoints}
+    end
+    --return love.math.triangulate(points)
+    local trianglesRaw = love.math.triangulate(points)
+    local triangles = {}
+    for _, triangle in ipairs(trianglesRaw) do
+        local point1 = Vector:new(triangle[1], triangle[2])
+        local point2 = Vector:new(triangle[3], triangle[4])
+        local point3 = Vector:new(triangle[5], triangle[6])
+        table.insert(triangles, {point1, point2, point3})
+    end
+    return triangles
 end
 
 return Shape

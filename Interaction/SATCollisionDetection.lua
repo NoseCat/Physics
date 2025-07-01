@@ -18,14 +18,14 @@ function SATCollide(ShapeA, ShapeB)
             table.insert(normals, normal)
         end
     end
-    getNormals(ShapeA:getRealPoints())
-    getNormals(ShapeB:getRealPoints())
+    getNormals(ShapeA)
+    getNormals(ShapeB)
 
     local smallestLength = math.huge
     local MTVaxis = Vector:new(0, 0)
     for _, axis in ipairs(normals) do
-        local minA, maxA = ShapeA:project(axis)
-        local minB, maxB = ShapeB:project(axis)
+        local minA, maxA = project(ShapeA, axis)
+        local minB, maxB = project(ShapeB, axis)
         --if there is atleast 1 axis with no overlap - shapes dont collide
         if maxA < minB or maxB < minA then
             return false, nil
@@ -39,4 +39,21 @@ function SATCollide(ShapeA, ShapeB)
     end
     --no axis overlap
     return true, MTVaxis * smallestLength
+end
+
+function project(points, axis)
+    axis = axis:normalized()
+
+    local min = math.huge
+    local max = -math.huge
+    for _, point in ipairs(points) do
+        local proj = point:dot(axis)
+        if proj < min then
+            min = proj
+        end
+        if proj > max then
+            max = proj
+        end
+    end
+    return min, max, axis * min, axis * max, axis * min - axis * max
 end

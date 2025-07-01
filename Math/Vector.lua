@@ -53,6 +53,37 @@ function Vector:perp()
     return Vector:new(-self.y, self.x)
 end
 
+-- math.atan2
+local function my_atan2(y, x)
+    if x > 0 then
+        return math.atan(y / x)
+    elseif x < 0 then
+        if y >= 0 then
+            return math.atan(y / x) + math.pi
+        else
+            return math.atan(y / x) - math.pi
+        end
+    else
+        if y > 0 then
+            return math.pi / 2
+        elseif y < 0 then
+            return -math.pi / 2
+        else
+            return 0 
+        end
+    end
+end
+
+--radians, full angle from -Pi to Pi
+function Vector:angleFull(vec)
+    return my_atan2(-self:cross(vec) , self:dot(vec))
+end
+
+--radians, minimal angle from 0 to Pi
+function Vector:angle(vec)
+   return math.acos(self:dot(vec) / (self:len() * vec:len()))
+end
+
 --radians, clockwise
 function Vector:rotate(angle)
     return Vector.rotateAround(self, Vector:new(0,0), angle)

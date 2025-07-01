@@ -24,18 +24,41 @@ end
 function Collide(ShapeA, ShapeB)
     local collision = Collision:new(ShapeA, ShapeB)
 
-    local isCollided, MTV = SATCollide(ShapeA, ShapeB)
-    collision.isCollided = isCollided
-    if not (isCollided or MTV) then
+    if not ShapeA.bbox:intersects(ShapeB.bbox) then
+        collision.isCollided = false
         return collision
     end
-
-    local minus = -1
-    if MTV:dot(ShapeA:getRealCenter() - ShapeB:getRealCenter()) < 0 then
-        minus = 1
+    local MTV = Vector:new(0,0)
+    local trianglesA = ShapeA:triangulate()
+    local trianglesB = ShapeB:triangulate()
+    local centerA = ShapeA:getRealCenter()
+    local centerB = ShapeB:getRealCenter()
+    for _, triangleA in ipairs(trianglesA) do
+        for _, triangleB in ipairs(trianglesB) do
+            local isCollided
+            local curMTV
+            isCollided, curMTV = SATCollide(triangleA, triangleB)
+            if isCollided and curMTV then
+                collision.isCollided = true
+                if curMTV:len() > MTV:len() then
+                    MTV = curMTV
+                    local function findCenter(points)
+                        local sum = Vector:new(0,0)
+                        for _, point in ipairs(points) do
+                            sum = sum + point
+                        end
+                        return sum / #points
+                    end
+                    centerA = findCenter(triangleA)
+                    centerB = findCenter(triangleB)
+                end
+            end
+        end
     end
-    MTV = MTV * minus -- fix MTV so it always points from B to A
-    collision.mtv = MTV
+--    collision.isCollided, MTV = SATCollide(ShapeA:getRealPoints(), ShapeB:getRealPoints())
+    if not (collision.isCollided or MTV) then
+        return collision
+    end
 
     collision.points = collision:getPoints()
     local sumColPoints = Vector:new(0, 0)
@@ -45,6 +68,14 @@ function Collide(ShapeA, ShapeB)
     if #collision.points > 0 then
         collision.point = sumColPoints / #collision.points
     end
+    local minus = 1
+
+    if MTV:dot(centerB - centerA) < 0 then
+        minus = -1
+    end
+    MTV = MTV * minus -- fix MTV so it always points from B to A
+    collision.mtv = MTV
+
     return collision
 end
 
@@ -74,18 +105,24 @@ function Collision:resolve()
     if not self.isCollided then
         return
     end
-    --should be staticA = massA / (massA + massB)
-    local staticA = 0.5
-    local staticB = 0.5
-    if self.shapeA.static and self.shapeB.static then
-        staticA, staticB = 0, 0
-    elseif self.shapeA.static then
-        staticA, staticB = 0, 1
-    elseif self.shapeB.static then
-        staticA, staticB = 1, 0
+    local massA = self.shapeA:getMass()
+    local massB = self.shapeB:getMass()
+    local staticA = massB / (massA + massB)
+    local staticB = massA / (massA + massB)
+    if self.shapeA.static then
+        staticA = 0
     end
-    self.shapeA:unCollide(self.mtv * -1 * staticA, self)
-    self.shapeB:unCollide(self.mtv * staticB, self)
+    if self.shapeB.static then
+        staticB = 0
+    end
+    if staticA ~= staticA then
+        staticA = 1
+    end
+    if staticB ~= staticB then
+        staticB = 1
+    end
+    self.shapeA:unCollide(self.mtv * -1 * staticA, self, self.shapeB)
+    self.shapeB:unCollide(self.mtv * staticB, self, self.shapeA)
 end
 
 --applies impulse parralel to mtv

@@ -17,13 +17,16 @@ function SoftBody:new(a, b, m, k)
 
     obj.restArea = 0
     obj.stiffness = k
-    obj.contourTension = 5
-    obj.internalPressure = 3
+    obj.contourTension = 2
+    obj.internalPressure = 1
+
+--    obj.bounce = 0
+  --  obj.friction = 0
 
     return obj
 end
 
-local ChaikinPasses = 1
+local ChaikinPasses = 2
 
 --=====================================================================
 --redifinig methods from PhysicsObject tree because different structure
@@ -54,6 +57,11 @@ end
 
 function SoftBody:print()
     print("Soft Body")
+end
+
+--needs to return mass of all points in a region
+function SoftBody:getMass()
+    return self.mass/(#self.points)
 end
 
 function SoftBody:applyForce(force)
@@ -130,6 +138,10 @@ function SoftBody:getRealCenter()
     return getCenterOfMass(self)
 end
 
+local function getRot(self)
+    return (self.points[1] - self:getRealCenter()):angleFull(Vector:new(0,-1))
+end
+
 local function getRotVel(self)
     local com = getCenterOfMass(self)
     local totalAngularVelocity = 0
@@ -167,16 +179,27 @@ local function getVel(self)
     return totalMomentum / #self.points
 end
 
-function SoftBody:unCollide(dir, collision)
-    -- for index = 1, #self.points do
-    --     self.points[index] = self.points[index] + dir
+local staticTodynamicMovement = 0.99
+--staticTodynamicMovement = 1/ (1 + 2*k)
+function SoftBody:unCollide(dir, collision, otherShape)
+    local collisionPoint = collision.point
+    -- local projLen = math.huge
+    -- local otherShapePoints = otherShape:getRealPoints()
+    -- for i, _ in ipairs(otherShapePoints) do
+    --     local iNext = (i % #otherShapePoints) + 1
+
+    --     local projectedPoint = collision.point:project(otherShapePoints[i], otherShapePoints[iNext])
+    --     if (projectedPoint - collision.point):len() < projLen then
+    --         projLen = (projectedPoint - collision.point):len()
+    --         collisionPoint = projectedPoint
+    --     end
     -- end
 
     local area = {}
     if #collision.points > 1 then
         local projections = {}
         for index = 1, #collision.points do
-            table.insert(projections, index, dir:normalized():perp() * (collision.points[index] - collision.point):dot(dir:normalized():perp()))
+            table.insert(projections, index, dir:normalized():perp() * (collision.points[index] - collisionPoint):dot(dir:normalized():perp()))
         end
 
         local max_dist = -math.huge
@@ -187,8 +210,8 @@ function SoftBody:unCollide(dir, collision)
                     max_dist = dist
                     -- area.max = collision.points[i]
                     -- area.min = collision.points[j]
-                    area.max = collision.point + projections[i]
-                    area.min = collision.point + projections[j]
+                    area.max = collisionPoint + projections[i]
+                    area.min = collisionPoint + projections[j]
                 end
             end
         end
@@ -201,29 +224,49 @@ function SoftBody:unCollide(dir, collision)
         area.min = dir:normalized():perp() * -math.huge
     end
 
-    -- if (area.max - area.min):len() < getMinRestLen(self) then
-    --     area.min = collision.point - dir:perp():normalized() * getMinRestLen(self)/2
-    --     area.max = collision.point + dir:perp():normalized() * getMinRestLen(self)/2
-    -- end
+    if (area.max - area.min):len() < getMinRestLen(self) then
+        area.min = collision.point - dir:perp():normalized() * getMinRestLen(self)/2
+        area.max = collision.point + dir:perp():normalized() * getMinRestLen(self)/2
+    end
+
+    area.max = area.max + area.max:normalized() * getMinRestLen(self)/5
+    area.min = area.min - area.min:normalized() * getMinRestLen(self)/5
 
     for index = 1, #self.points do
-        local len = dir:normalized() * (self.points[index] - collision.point):dot(dir:normalized())
+        -- local collisionPoint = collision.point
+        -- local projLen = math.huge
+        -- local otherShapePoints = otherShape:getRealPoints()
+        -- for i, _ in ipairs(otherShapePoints) do
+        --     local iNext = (i % #otherShapePoints) + 1
+
+        --     local projectedPoint = collision.point:project(otherShapePoints[i], otherShapePoints[iNext])
+        --     if (projectedPoint - collision.point):len() < projLen then
+        --         projLen = (projectedPoint - collision.point):len()
+        --         collisionPoint = projectedPoint
+        --     end
+        -- end
+
+        local len = dir:normalized() * (self.points[index] - collisionPoint):dot(dir:normalized())
         if len:len() > dir:len() then
             goto continue
         end
 
-        local proj = collision.point + dir:perp():normalized() * (self.points[index] - collision.point):dot(dir:perp():normalized())
+        local proj = collisionPoint + dir:perp():normalized() * (self.points[index] - collisionPoint):dot(dir:perp():normalized())
         local areaLen = (area.max - area.min):len()
         if (proj - area.max):len() > areaLen or (proj - area.min):len() > areaLen then
             goto continue
         end
 
-        local toPoint = dir:normalized() * (collision.point - self.points[index]):dot(dir:normalized())
-        self.points[index] = self.points[index] + toPoint + dir
+        local toPoint = dir:normalized() * (collisionPoint - self.points[index]):dot(dir:normalized())
+        self.points[index] = self.points[index] + (toPoint + dir) * staticTodynamicMovement
         --this is how you move points without impacting velocity
-        local toPointPrev = dir:normalized() * (collision.point - self.pointsPrev[index]):dot(dir:normalized())
-        self.pointsPrev[index] = self.pointsPrev[index] + toPointPrev + dir
+        local toPointPrev = dir:normalized() * (collisionPoint - self.pointsPrev[index]):dot(dir:normalized())
+        self.pointsPrev[index] = self.pointsPrev[index] + (toPointPrev + dir) * staticTodynamicMovement
         ::continue::
+    end
+    for index = 1, #self.points do
+        self.points[index] = self.points[index] + dir * (1 - staticTodynamicMovement)
+        self.pointsPrev[index] = self.pointsPrev[index] + dir * (1 - staticTodynamicMovement)
     end
 end
 
@@ -253,7 +296,7 @@ local function attachPoints(self)
 end
 
 function SoftBody:update(delta)
-    for _ = 1, 5 do
+    for _ = 1, 24 do
         attachPoints(self)
         preserveArea(self)
     end
@@ -267,9 +310,29 @@ function SoftBody:update(delta)
         self.pointsForce[index] = Vector:new(0,0)
     end
 
+    self.rot = getRot(self)
     self.rotVel = getRotVel(self)
     self.vel = getVel(self)
+    self.bbox:updatePoints(self:getRealPoints())
 end
+
+-- function SoftBody:triangulate()
+--     local Rpoints = self:getRealPoints()
+--     local points = {}
+--     for _, point in ipairs(Rpoints) do
+--         table.insert(points, point.x)
+--         table.insert(points, point.y)
+--     end
+--     if love.math.isConvex(points) then
+--         return {Rpoints}
+--     end
+--     local triangles = {}
+--     for i, _ in ipairs(Rpoints) do
+--         local iNext = (i % #Rpoints) + 1
+--         table.insert(triangles, {Rpoints[i], self:getRealCenter(), Rpoints[iNext]})
+--     end
+--     return triangles
+-- end
 
 function SoftBody:draw()
     Object.draw(self)
@@ -303,14 +366,31 @@ function SoftBody:draw()
         end
     end
 
-    love.graphics.setColor(0.5, 0.7, 0.7)
-    local points = {}
-    for _, point in ipairs(CHpoints) do
-        table.insert(points, point.x)
-        table.insert(points, point.y)
+    love.graphics.setLineWidth(5)
+    local vertices = {}
+    for i, point in ipairs(CHpoints) do
+        local progress = (i-1)/(#CHpoints-1)
+        local r, g, b = 0, 1 - progress, progress
+        table.insert(vertices, {x = point.x, y = point.y, r = r, g = g, b = b})
     end
-    love.graphics.setLineWidth(3)
-    love.graphics.polygon("line", points)
+    for index, vertice in ipairs(vertices) do
+        local nextIdx = (index % #vertices) + 1
+
+        love.graphics.setColor(vertice.r, vertice.g, vertice.b)
+        love.graphics.line(vertice.x, vertice.y, vertices[nextIdx].x, vertices[nextIdx].y)
+    end
+
+    -- love.graphics.setLineWidth(1)
+    -- love.graphics.setColor(1, 0, 0)
+    -- local triangles = self:triangulate()
+    -- for _, triangle in ipairs(triangles) do
+    --     local points = {}
+    --     for _, point in ipairs(triangle) do
+    --         table.insert(points, point.x)
+    --         table.insert(points, point.y)
+    --     end
+    --     love.graphics.polygon("line", points)
+    -- end
 end
 
 

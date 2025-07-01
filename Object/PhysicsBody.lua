@@ -1,4 +1,5 @@
 local Shape = require('Object.Shape')
+local Bbox = require('Interaction.BoundingBox')
 require('Math.Vector')
 local PHYSICSMANAGER = require('Object.PhysicsManager')
 local PM = PHYSICSMANAGER:getInstance()
@@ -10,9 +11,6 @@ function PhysicsBody:new(a, b, m)
 
     local obj = Shape.new(self, a, b)
 
-    obj.static = false --TODO: frcition should not acount for static object mass
-    obj.bboxSize = 0
-
     obj.mass = m
     obj.force = Vector:new(0,0)
     obj.inertia = 0
@@ -20,6 +18,9 @@ function PhysicsBody:new(a, b, m)
 
     obj.bounce = 0.5
     obj.friction = 0.3
+
+    obj.static = false --TODO: frcition should not acount for static object mass
+    obj.bbox = Bbox:new()
 
     table.insert(PM.objs, obj)
     return obj
@@ -36,6 +37,8 @@ function PhysicsBody:update(delta)
 
     self.force = Vector:new(0, 0)
     self.torque = 0
+
+    self.bbox:updatePoints(self:getRealPoints())
 end
 
 function PhysicsBody:updateConstants()
@@ -52,8 +55,6 @@ function PhysicsBody:updateConstants()
     local k = 0.5
     L = maxDistance
     self.inertia = k * self.mass * L^2
-
-    self.bboxSize = maxDistance * 2
 end
 
 function PhysicsBody:collide(PhysicsBodyB)
@@ -89,6 +90,10 @@ function Object:unCollide(dir)
     self.pos = self.pos + dir
 end
 
+function PhysicsBody:getMass()
+    return self.mass
+end
+
 -- function PhysicsBody:getForceFromTorque(point)
 --     local r = point - (self.pos + self.center)
 --     local rLen = r:len()
@@ -112,7 +117,7 @@ function PhysicsBody:print()
 end
 
 function PhysicsBody:getBoundingBox()
-    return self.bboxSize
+    return self.bbox
 end
 
 return PhysicsBody
