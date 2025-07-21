@@ -76,7 +76,7 @@ local function findIntersections(points)
             if j == iNext or jNext == i then
                 goto continue
             end
-            local intersect = SegmentIntersect(points[i], points[iNext], points[j], points[jNext])
+            local intersect = Vector.SegmentIntersect(points[i], points[iNext], points[j], points[jNext])
             if intersect then
                 table.insert(intersections, intersect)
             end

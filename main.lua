@@ -8,14 +8,14 @@ require('Math.Vector')
 require('Object.Object')
 Shape = require('Object.Shape')
 PhysicsBody = require('Object.PhysicsBody')
+SoftBody = require('Object.SoftBody')
+require('Interaction.Collision')
 local OBJECTMANAGER = require('Object.Manager')
 OM = OBJECTMANAGER:getInstance()
 local PHYSICSMANAGER = require('Object.PhysicsManager')
 local PM = PHYSICSMANAGER:getInstance()
 
-SoftBody = require('Object.SoftBody')
-
-require('Interaction.Collision')
+local Voronoi = require('Diagrams.VoronoiObject')
 
 local LOG = require('Debug.Log')
 Log = LOG:getInstance()
@@ -26,7 +26,14 @@ function love.load()
     love.window.setTitle("Physics")
     love.window.setMode(800, 600)
 
+    local points = {}
+    for i = 1, 25, 1 do
+        table.insert(points, Vector:new(math.random(800), math.random(600)))        
+    end
+    local dia = Voronoi:new(points)
+    --dia:getDiagramVoronoi(points)
     --test
+
     floor = PhysicsBody:new(400, 580, math.huge)
     floor:addPoint(400, 0)
     floor:addPoint(-400, 0)
@@ -97,7 +104,7 @@ function love.load()
     bowl2:addPoint(-50, 0)
 
     s3 = SoftBody:new(600,200, 10, 1)
-    local pointCount = 10
+    local pointCount = 15
     local radius = 80
     for i = 0, pointCount - 1 do
         local angle = (i / pointCount) * math.pi * 2
@@ -112,7 +119,6 @@ function love.load()
         local y = math.sin(angle) * radius
         s4:addPoint(x, y)
     end
-
 
     NextTime = love.timer.getTime()
 end
@@ -158,7 +164,7 @@ function love.update(dt)
         grabbed:applyForceAtPoint((mouse - (grabbed:getRealCenter() + grabPoint:rotate(grabbed.rot - grabRotation))) * 10, grabbed:getRealCenter() + grabPoint:rotate(grabbed.rot - grabRotation))
     end
 
-    PM:iterate(dt, 1)
+    PM:iterate(dt, 3)
     OM:update(dt)
 end
 

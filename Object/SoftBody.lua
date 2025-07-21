@@ -17,8 +17,8 @@ function SoftBody:new(a, b, m, k)
 
     obj.restArea = 0
     obj.stiffness = k
-    obj.contourTension = 2
-    obj.internalPressure = 1
+    obj.contourTension = 5
+    obj.internalPressure = 3
 
 --    obj.bounce = 0
   --  obj.friction = 0

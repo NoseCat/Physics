@@ -114,7 +114,14 @@ function Vector:project(A, B)
     return Vector:new(A.x + t * AB.x, A.y + t * AB.y)
 end
 
-local function LineIntersect(line1A, line1B, line2A, line2B)
+function Vector:isEqual(vec, margin)
+    if (self - vec):len() <= margin then
+        return true
+    end
+    return false
+end
+
+function Vector.LineIntersect(line1A, line1B, line2A, line2B) 
     local A1 = line1B.y - line1A.y;
 	local B1 = line1A.x - line1B.x;
 	local C1 = line1B.x * line1A.y - line1A.x * line1B.y;
@@ -127,7 +134,7 @@ local function LineIntersect(line1A, line1B, line2A, line2B)
                         (C1 * A2 - C2 * A1) / (A1 * B2 - A2 * B1) )
 end
 
-function SegmentIntersect(seg1A, seg1B, seg2A, seg2B)
+function Vector.SegmentIntersect(seg1A, seg1B, seg2A, seg2B)
     local r = seg1B - seg1A
     local s = seg2B - seg2A
     local rxs = r.x * s.y - r.y * s.x
@@ -157,3 +164,23 @@ local function triangleHeight(A, B, C)
     local height = (2 * area) / AB
     return height
 end
+
+return Vector
+
+--Class Vector new(x,y)
+--Methods:
+--operator add
+--operator sub
+--operator mul
+--operator div
+--len()
+--len2() --len squared
+--normalized()
+--dot(vec)
+--cross(vec)
+--perp()
+--angleFull(vec) --radians, full angle from -Pi to Pi
+--angle(vec) --radians, minimal angle from 0 to Pi
+--rotate(angle) --radians, clockwise
+--rotateAround(rotationPoint, angle) --radians, clockwise
+--isEqual(vec, margin) --is vec within certain margin of this

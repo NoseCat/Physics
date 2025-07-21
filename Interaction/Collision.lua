@@ -91,7 +91,7 @@ function Collision:getPoints()
         for j = 1, #SBrealPoints do
             local jnext = j + 1
             if jnext > #SBrealPoints then jnext = 1 end
-            local intersection = SegmentIntersect(SArealPoints[i], SArealPoints[inext], SBrealPoints[j], SBrealPoints[jnext])
+            local intersection = Vector.SegmentIntersect(SArealPoints[i], SArealPoints[inext], SBrealPoints[j], SBrealPoints[jnext])
             if intersection then
                 table.insert(points, intersection)
             end
