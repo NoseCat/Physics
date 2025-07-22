@@ -32,7 +32,7 @@ function PhysicsManager:iterate(delta, iterations)
             for idx2 = idx1 + 1, #self.objs do
                 local obj1 = self.objs[idx1]
                 local obj2 = self.objs[idx2]
-                local collision = obj1:collide(obj2)
+                local collision = Collision.Collide(obj1, obj2)
                 if collision.isCollided and i == 1 then
                     table.insert(collisions, collision)
                 end

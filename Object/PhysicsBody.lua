@@ -63,10 +63,6 @@ function PhysicsBody:updateConstants()
     self.inertia = k * self.mass * L^2
 end
 
-function PhysicsBody:collide(PhysicsBodyB)
-    return Collide(self, PhysicsBodyB)
-end
-
 function PhysicsBody:applyForce(force)
     if self.static then
         return
@@ -100,30 +96,8 @@ function PhysicsBody:getMass()
     return self.mass
 end
 
--- function PhysicsBody:getForceFromTorque(point)
---     local r = point - (self.pos + self.center)
---     local rLen = r:len()
-
---     if rLen == 0 then
---         return Vector:new(0, 0)
---     end
-
---     local forceMagnitude = math.abs(self.torque) / rLen
-
---     local sign = self.torque > 0 and 1 or -1
---     local forceDirection = Vector:new(-r.y, r.x):normalized() * sign
-
---     local force = forceDirection * forceMagnitude
-
---     return force
--- end
-
 function PhysicsBody:print()
     print("PhysicsBody")
-end
-
-function PhysicsBody:getBoundingBox()
-    return self.bbox
 end
 
 return PhysicsBody

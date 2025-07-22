@@ -58,7 +58,7 @@ function Shape:draw()
 end
 
 function Shape:update(delta)
---    Object.update(self, delta)
+    Object.update(self, delta)
 end
 
 function Shape:addPoint(x, y)
@@ -98,7 +98,7 @@ function Shape:updateConstants()
     for _, point in ipairs(self.points) do
         sumPoints = sumPoints + point
     end
-    --self.center = sumPoints / #self.points
+    self.center = sumPoints / #self.points
 end
 
 local function getRotatedPoints(self)

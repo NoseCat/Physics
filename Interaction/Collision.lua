@@ -21,7 +21,7 @@ function Collision:new(shapeA, shapeB)
 end
 
 --creates collsion object for 2 shapes
-function Collide(ShapeA, ShapeB)
+function Collision.Collide(ShapeA, ShapeB)
     local collision = Collision:new(ShapeA, ShapeB)
 
     if not ShapeA.bbox:intersects(ShapeB.bbox) then
