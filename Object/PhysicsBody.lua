@@ -11,6 +11,12 @@ function PhysicsBody:new(a, b, m)
 
     local obj = Shape.new(self, a, b)
 
+    obj.vel = Vector:new(0,0)
+    obj.accel  = Vector:new(0,0)
+
+    obj.rotVel = 0
+    obj.rotAccel = 0
+
     obj.mass = m
     obj.force = Vector:new(0,0)
     obj.inertia = 0

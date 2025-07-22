@@ -31,7 +31,7 @@ function love.load()
         table.insert(points, Vector:new(math.random(800), math.random(600)))        
     end
     --test
-    local dia = Voronoi:new(points)
+    --local dia = Voronoi:new(points)
 
     floor = PhysicsBody:new(400, 580, math.huge)
     floor:addPoint(400, 0)
@@ -102,22 +102,22 @@ function love.load()
     bowl2.static = false
     bowl2:addPoint(-50, 0)
 
-    -- s3 = SoftBody:new(600,200, 10, 1)
-    -- local pointCount = 15
-    -- local radius = 80
-    -- for i = 0, pointCount - 1 do
-    --     local angle = (i / pointCount) * math.pi * 2
-    --     local x = math.cos(angle) * radius
-    --     local y = math.sin(angle) * radius
-    --     s3:addPoint(x, y)
-    -- end
-    -- s4 = SoftBody:new(600,0, 10, 1)
-    -- for i = 0, pointCount - 1 do
-    --     local angle = (i / pointCount) * math.pi * 2
-    --     local x = math.cos(angle) * radius
-    --     local y = math.sin(angle) * radius
-    --     s4:addPoint(x, y)
-    -- end
+    s3 = SoftBody:new(600,200, 10, 1)
+    local pointCount = 15
+    local radius = 80
+    for i = 0, pointCount - 1 do
+        local angle = (i / pointCount) * math.pi * 2
+        local x = math.cos(angle) * radius
+        local y = math.sin(angle) * radius
+        s3:addPoint(x, y)
+    end
+    s4 = SoftBody:new(600,0, 10, 1)
+    for i = 0, pointCount - 1 do
+        local angle = (i / pointCount) * math.pi * 2
+        local x = math.cos(angle) * radius
+        local y = math.sin(angle) * radius
+        s4:addPoint(x, y)
+    end
 
     NextTime = love.timer.getTime()
 end
@@ -165,7 +165,7 @@ function love.update(dt)
         grabbed:applyForceAtPoint((mouse - (grabbed:getRealCenter() + grabPoint:rotate(grabbed.rot - grabRotation))) * 10, grabbed:getRealCenter() + grabPoint:rotate(grabbed.rot - grabRotation))
     end
 
-    PM:iterate(dt, 3)
+    PM:iterate(dt, 5)
     OM:update(dt)
 end
 
@@ -181,7 +181,7 @@ function love.draw()
         love.graphics.line(point.x, point.y, mouse.x, mouse.y)
     end
 
-    love.graphics.print(Delta)
+    love.graphics.print(string.format( "%.2g", Delta), 15)
 
     local curTime = love.timer.getTime()
     if NextTime <= curTime then

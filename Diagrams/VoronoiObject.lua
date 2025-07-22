@@ -24,19 +24,20 @@ end
 
 function VoronoiObjectDiagram:update(delta)
     local points = {}
-
     for _, cell in pairs(self.cells.array) do
         if cell.site:isEqual(self.prevMouse, 1e-5) then goto continue end
         for _, point in ipairs(self.perimeterPoints) do
             if cell.site:isEqual(point, 1e-5) then goto continue end
         end
 
-        local mid = Vector:new(0,0)
-        for _, edge in ipairs(cell.edges) do
-            mid = mid + edge.a
-        end
-        mid = mid / #cell.edges
-        table.insert(points, cell.site + (mid - cell.site) * 0.25 * delta)
+        -- local mid = Vector:new(0,0)
+        -- local count = 0
+        -- for _, edge in ipairs(cell.edges) do
+        --     count = count + 1
+        --     mid = mid + edge.a
+        -- end
+        -- mid = mid / count
+        table.insert(points, cell.site )-- + (mid - cell.site) * 0.25 * delta)
         ::continue::
     end
 

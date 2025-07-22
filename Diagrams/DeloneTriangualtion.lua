@@ -16,13 +16,6 @@ function Triangle:new(edges, id)
     return newObj
 end
 
-local function hasVertex(tri, point)
-    for _, edge in ipairs(tri.edges) do
-        if edge.a:isEqual(point, 1e-5) or edge.b:isEqual(point, 1e-5) then return true end
-    end
-    return false
-end
-
 local triangleId = 0
 local function findSuperTriangle(pointList)
     local minX, minY = math.huge, math.huge
@@ -122,26 +115,15 @@ local function hasCommonVertex(triangle1, triangle2)
     return false
 end
 
-function Delone.BowyerWatsonDeloneTriangulation(pointList)
+function Delone.BowyerWatsonDeloneTriangulation(points)
     local triangulation = {} --triangles
-    --local siteTriangles = {}
+    local siteTriangles = {} --triangles for points
 
     triangleId = 0
-    local superTriangle = findSuperTriangle(pointList)
+    local superTriangle = findSuperTriangle(points)
     triangulation[superTriangle.id] = superTriangle
 
-    triangulation = Delone.addPoints(triangulation, pointList) --add all the points to the triangulation
-
-    for _, triangle in pairs(triangulation) do -- done inserting points, now clean up
-        if hasCommonVertex(triangle, superTriangle) then
-            triangulation[triangle.id] = nil
-        end
-    end
-    return triangulation
-end
-
-function Delone.addPoints(triangulation, points)
-    for _, point in ipairs(points) do
+    for _, point in ipairs(points) do --add all the points to the triangulation
 
         local badTriangles = {}
         for _, triangle in pairs(triangulation) do -- first find all the triangles that are no longer valid due to the insertion
@@ -161,54 +143,34 @@ function Delone.addPoints(triangulation, points)
 
         for _, triangle in ipairs(badTriangles) do -- remove them from the data structure
             triangulation[triangle.id] = nil
+            for _, vertex in ipairs(triangle.vertices) do
+                if siteTriangles[vertex] then --??
+                    siteTriangles[vertex][triangle.id] = nil
+                end
+            end
         end
 
         for _, edge in ipairs(polygon) do -- re-triangulate the polygonal hole
             local newTri = formTriangle(edge, point)
             triangulation[newTri.id] = newTri
-        end
 
-    end
-    return triangulation
-end
-
-function Delone.movePoint(triangulation, oldPoint, newPoint) --??? bug
-    local badTriangles = {}
-    for _, triangle in pairs(triangulation) do
-        if hasVertex(triangle, oldPoint) then
-            table.insert(badTriangles, triangle)
-        end
-    end
-
-    local polygon = {}
-    for _, triangle in ipairs(badTriangles) do -- find the boundary of the polygonal hole
-        for _, edge in ipairs(triangle.edges) do
-            if not isSharedEdge(edge, badTriangles, triangle.id) then --edge is not shared by any *other*! triangles in badTriangles
-                table.insert(polygon, edge)
+            for _, vertex in ipairs(newTri.vertices) do
+                siteTriangles[vertex] = siteTriangles[vertex] or {}
+                siteTriangles[vertex][newTri.id] = newTri
             end
         end
     end
 
-    for _, triangle in ipairs(badTriangles) do
-        triangulation[triangle.id] = nil
+    for _, vertex in ipairs(superTriangle.vertices) do
+        siteTriangles[vertex] = nil
     end
 
-    return Delone.addPoints(triangulation, {newPoint})
-end
-
-function Diagram:updateDiagramDelone(oldPoint, newPoint)
-    self:clear()
-    local triangles = Delone.movePoint(self.rawData, oldPoint, newPoint)
-    self.rawData = triangles
-
-    for _, triangle in pairs(triangles) do
-        for _, edge in ipairs(triangle.edges) do
-            self:insertVertex(edge.a)
-            self:insertVertex(edge.b)
-            self:insertEdge(edge.a, edge.b)
+    for _, triangle in pairs(triangulation) do -- done inserting points, now clean up
+        if hasCommonVertex(triangle, superTriangle) then
+            triangulation[triangle.id] = nil
         end
     end
-
+    return triangulation, siteTriangles
 end
 
 function Diagram:getDiagramDelone(points)

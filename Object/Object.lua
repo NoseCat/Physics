@@ -10,12 +10,6 @@ function Object:new(a,b)
     newObj.live = true
 
     newObj.pos = Vector:new(a,b)
-    newObj.vel = Vector:new(0,0)
-    newObj.accel  = Vector:new(0,0)
-
-    newObj.rot = 0
-    newObj.rotVel = 0
-    newObj.rotAccel = 0
 
     table.insert(OM.objs, newObj)
 
@@ -23,11 +17,8 @@ function Object:new(a,b)
 end
 
 function Object:update(delta)
-    self.vel = self.vel + self.accel * delta
-    self.pos = self.pos + self.vel * delta
-
-    self.rotVel = self.rotVel + self.rotAccel * delta
-    self.rot = self.rot + self.rotVel * delta
+--    print("updating empty object")
+--    self:print()
 end
 
 function Object:draw()
@@ -40,17 +31,6 @@ end
 function Object:kill()
     --self = nil
     self.live = false
-end
-
-function Object:isInstanceOf(class)
-    local mt = getmetatable(self)
-    while mt do
-        if mt == class then
-            return true
-        end
-        mt = getmetatable(mt)
-    end
-    return false
 end
 
 function Object:print()

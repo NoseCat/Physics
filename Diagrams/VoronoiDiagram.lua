@@ -45,34 +45,29 @@ end
 
 function Voronoi.getThroughDelone(sites)
     local voronoiCells = {}
-    local delone = Delone.BowyerWatsonDeloneTriangulation(sites)
+    local _, siteTriangles = Delone.BowyerWatsonDeloneTriangulation(sites)
 
-    -- find all circumcenters (Voronoi vertices)
-    local circumcenters = {}
-    for _, triangle in pairs(delone) do
-        local a, b, c = triangle.edges[1].a, triangle.edges[1].b, triangle.edges[2].b
-        local circumcenter = getCircumcircle(a, b, c)
-        table.insert(circumcenters, {triangle = triangle, center = circumcenter})
-    end
-
-    for _, site in pairs(sites) do
-        local cellEdges = {}
-
+    for sitePos, site in pairs(siteTriangles) do
         local sitePoly = {}
-        for _, data in pairs(circumcenters) do --this makes it O(n^2)
-            if isPointInTriangle(site, data.triangle) then
-                table.insert(sitePoly, data.center)
+        for _, triangle in pairs(site) do
+            if not triangle.circumcenter:isEqual(Vector:new(0,0)) then
+                table.insert(sitePoly, triangle.circumcenter)
             end
         end
+        if #sitePoly < 3 then
+            goto continue
+        end
 
-        sitePoly = sortPointsAround(sitePoly, site)
-        -- Connect the circumcenters of adjacent triangles to form the cell
+        sitePoly = sortPointsAround(sitePoly, sitePos)
+
+        local cellEdges = {}
         for i = 1, #sitePoly do
             local nextIdx = (i % #sitePoly) + 1
             table.insert(cellEdges, {a = sitePoly[i], b = sitePoly[nextIdx]})
         end
 
-        table.insert(voronoiCells, {site = site, edges = cellEdges})
+        table.insert(voronoiCells, {site = sitePos, edges = cellEdges})
+        ::continue::
     end
     return voronoiCells, sites
 end
@@ -83,13 +78,17 @@ function Diagram:getDiagramVoronoi(sites)
     for _, cell in ipairs(rawOutput) do
         for _, edge in ipairs(cell.edges) do
             --vertexes
-            self:insertVertex(edge.a)
-            self:insertVertex(edge.b)
+            --self:insertVertex(edge.a)
+            --self:insertVertex(edge.b)
             --edges
             self:insertEdge(edge.a, edge.b)
         end
         --cells
         self:insertCell(cell.site, cell.edges)
+    end
+
+    for _, site in ipairs(sites) do
+        self.vertexes:insert(site)
     end
 end
 

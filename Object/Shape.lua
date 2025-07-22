@@ -5,6 +5,8 @@ Shape.__index = Shape
 function Shape:new(a, b)
     local obj = Object.new(self, a, b)
 
+    obj.rot = 0
+
     --relative to pos
     obj.center = Vector:new(a,b)
     --reletive to pos
@@ -16,7 +18,8 @@ end
 function Shape:draw()
     Object.draw(self)
     love.graphics.setColor({1,0,0})
-    love.graphics.circle("fill", self.pos.x + self.center.x, self.pos.y + self.center.y, 10)
+    local center = self:getRealCenter()
+    love.graphics.circle("fill", center.x, center.y, 10)
 
     if #self.points < 3 then
         return
@@ -55,7 +58,7 @@ function Shape:draw()
 end
 
 function Shape:update(delta)
-    Object.update(self, delta)
+--    Object.update(self, delta)
 end
 
 function Shape:addPoint(x, y)
@@ -95,7 +98,7 @@ function Shape:updateConstants()
     for _, point in ipairs(self.points) do
         sumPoints = sumPoints + point
     end
-    self.center = sumPoints / #self.points
+    --self.center = sumPoints / #self.points
 end
 
 local function getRotatedPoints(self)
@@ -117,24 +120,6 @@ end
 
 function Shape:getRealCenter()
     return self.center + self.pos
-end
-
-local function project(self, axis)
-    local realPoints = self:getRealPoints()
-    axis = axis:normalized()
-
-    local min = math.huge
-    local max = -math.huge
-    for _, point in ipairs(realPoints) do
-        local proj = point:dot(axis)
-        if proj < min then
-            min = proj
-        end
-        if proj > max then
-            max = proj
-        end
-    end
-    return min, max, axis * min, axis * max, axis * min - axis * max
 end
 
 function Shape:containsPoint(point)
