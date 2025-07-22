@@ -8,35 +8,47 @@ function VoronoiObjectDiagram:new(points)
 
     obj.size = #points
     obj.prevMouse = Vector:new(400, 300)
+
+    obj.perimeterPoints = {}
+    for i = 1, 16, 1 do
+        local angle = (i / 16) * math.pi * 2
+        local x = math.cos(angle) * 600
+        local y = math.sin(angle) * 600
+        obj.perimeterPoints[i] = Vector:new(400, 300) + Vector:new(x, y)
+    end
+
     obj:getDiagramVoronoi(points)
 
     return obj
 end
 
-
 function VoronoiObjectDiagram:update(delta)
     local points = {}
-    for _, cell in ipairs(self.cells) do
+
+    for _, cell in pairs(self.cells.array) do
+        if cell.site:isEqual(self.prevMouse, 1e-5) then goto continue end
+        for _, point in ipairs(self.perimeterPoints) do
+            if cell.site:isEqual(point, 1e-5) then goto continue end
+        end
+
         local mid = Vector:new(0,0)
         for _, edge in ipairs(cell.edges) do
             mid = mid + edge.a
         end
         mid = mid / #cell.edges
         table.insert(points, cell.site + (mid - cell.site) * 0.25 * delta)
+        ::continue::
     end
-    for i = self.size + 1, self.size + 17, 1 do
-        points[i] = nil
-    end
+
     local mx, my = love.mouse.getPosition()
     local mouse = Vector:new(mx,my)
-    points[self.size + 1] = self.prevMouse + (mouse - self.prevMouse) * 0.5 * delta
-    self.prevMouse = points[self.size + 1]
-    for i = self.size + 2, self.size + 17, 1 do
-        local angle = ((i - self.size + 2) / 16) * math.pi * 2
-        local x = math.cos(angle) * 600
-        local y = math.sin(angle) * 600
-        points[i] = Vector:new(400, 300) + Vector:new(x, y)
+    mouse = self.prevMouse + (mouse - self.prevMouse) * 0.5 * delta
+    self.prevMouse = mouse
+
+    for _, point in ipairs(self.perimeterPoints) do
+        table.insert(points, point)
     end
+    table.insert(points, mouse)
 
     self:getDiagramVoronoi(points)
 end

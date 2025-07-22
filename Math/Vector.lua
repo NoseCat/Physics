@@ -98,7 +98,6 @@ function Vector:rotateAround(rotationPoint, angle)
     return newPoint
 end
 
---??
 function Vector:project(A, B)
     local AB = B - A
     local AP = self - A
@@ -115,10 +114,21 @@ function Vector:project(A, B)
 end
 
 function Vector:isEqual(vec, margin)
-    if (self - vec):len() <= margin then
+    margin = margin or 0
+    if math.abs(self.x - vec.x) < margin and math.abs(self.y - vec.y) < margin then
         return true
     end
     return false
+end
+
+function Vector:hash(margin)
+    margin = margin or 0
+    if margin <= 0 then return string.format("%.15g:%.15g", self.x, self.y)
+    else
+        local x = math.floor(self.x / margin + 0.5) * margin
+        local y = math.floor(self.y / margin + 0.5) * margin
+        return string.format("%.15g:%.15g", x, y)
+    end
 end
 
 function Vector.LineIntersect(line1A, line1B, line2A, line2B) 

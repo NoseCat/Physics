@@ -30,9 +30,8 @@ function love.load()
     for i = 1, 25, 1 do
         table.insert(points, Vector:new(math.random(800), math.random(600)))        
     end
-    local dia = Voronoi:new(points)
-    --dia:getDiagramVoronoi(points)
     --test
+    local dia = Voronoi:new(points)
 
     floor = PhysicsBody:new(400, 580, math.huge)
     floor:addPoint(400, 0)
@@ -103,34 +102,36 @@ function love.load()
     bowl2.static = false
     bowl2:addPoint(-50, 0)
 
-    s3 = SoftBody:new(600,200, 10, 1)
-    local pointCount = 15
-    local radius = 80
-    for i = 0, pointCount - 1 do
-        local angle = (i / pointCount) * math.pi * 2
-        local x = math.cos(angle) * radius
-        local y = math.sin(angle) * radius
-        s3:addPoint(x, y)
-    end
-    s4 = SoftBody:new(600,0, 10, 1)
-    for i = 0, pointCount - 1 do
-        local angle = (i / pointCount) * math.pi * 2
-        local x = math.cos(angle) * radius
-        local y = math.sin(angle) * radius
-        s4:addPoint(x, y)
-    end
+    -- s3 = SoftBody:new(600,200, 10, 1)
+    -- local pointCount = 15
+    -- local radius = 80
+    -- for i = 0, pointCount - 1 do
+    --     local angle = (i / pointCount) * math.pi * 2
+    --     local x = math.cos(angle) * radius
+    --     local y = math.sin(angle) * radius
+    --     s3:addPoint(x, y)
+    -- end
+    -- s4 = SoftBody:new(600,0, 10, 1)
+    -- for i = 0, pointCount - 1 do
+    --     local angle = (i / pointCount) * math.pi * 2
+    --     local x = math.cos(angle) * radius
+    --     local y = math.sin(angle) * radius
+    --     s4:addPoint(x, y)
+    -- end
 
     NextTime = love.timer.getTime()
 end
 
 local logFlushAcc = 0
 local logFlushTime = 5
+local Delta = 0
 
 local grabPoint = Vector:new(0,0)
 local grab = false
 local grabbed = nil
 local grabRotation = 0
 function love.update(dt)
+    Delta = dt
     NextTime = NextTime + 1 / FPSLimit
 
     logFlushAcc = logFlushAcc + dt
@@ -172,12 +173,15 @@ function love.draw()
     love.graphics.clear(0.1, 0.1, 0.1)
     OM:draw()
 
+    --test
     love.graphics.setLineWidth(1)
     love.graphics.setColor(0.9, 0.9, 0.9)
     if love.mouse.isDown(1) and grab and grabbed then
         local point = grabbed:getRealCenter() + grabPoint:rotate(grabbed.rot - grabRotation)
         love.graphics.line(point.x, point.y, mouse.x, mouse.y)
     end
+
+    love.graphics.print(Delta)
 
     local curTime = love.timer.getTime()
     if NextTime <= curTime then

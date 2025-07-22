@@ -59,7 +59,7 @@ function Voronoi.getThroughDelone(sites)
         local cellEdges = {}
 
         local sitePoly = {}
-        for _, data in pairs(circumcenters) do
+        for _, data in pairs(circumcenters) do --this makes it O(n^2)
             if isPointInTriangle(site, data.triangle) then
                 table.insert(sitePoly, data.center)
             end
@@ -69,16 +69,10 @@ function Voronoi.getThroughDelone(sites)
         -- Connect the circumcenters of adjacent triangles to form the cell
         for i = 1, #sitePoly do
             local nextIdx = (i % #sitePoly) + 1
-            table.insert(cellEdges, {
-                a = sitePoly[i],
-                b = sitePoly[nextIdx]
-            })
+            table.insert(cellEdges, {a = sitePoly[i], b = sitePoly[nextIdx]})
         end
 
-        table.insert(voronoiCells, {
-            site = site,
-            edges = cellEdges
-        })
+        table.insert(voronoiCells, {site = site, edges = cellEdges})
     end
     return voronoiCells, sites
 end

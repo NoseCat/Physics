@@ -1,5 +1,9 @@
 local AVLTree = {}
 AVLTree.__index = AVLTree
+function AVLTree:new()
+    return setmetatable({ root = nil }, self)
+end
+
 
 -- Вспомогательная функция для создания узла
 local function Node(key, value)
@@ -77,11 +81,6 @@ local function balance(node)
     end
 
     return node
-end
-
--- Создание нового AVL-дерева
-function AVLTree:new()
-    return setmetatable({ root = nil }, self)
 end
 
 -- Рекурсивная вставка

@@ -10,7 +10,17 @@ function Triangle:new(edges, id)
     newObj.id = id
     newObj.edges = edges
 
+    newObj.vertices = {edges[1].a, edges[1].b, edges[2].b}
+    newObj.circumcenter = getCircumcircle(newObj.vertices[1], newObj.vertices[2], newObj.vertices[3])
+
     return newObj
+end
+
+local function hasVertex(tri, point)
+    for _, edge in ipairs(tri.edges) do
+        if edge.a:isEqual(point, 1e-5) or edge.b:isEqual(point, 1e-5) then return true end
+    end
+    return false
 end
 
 local triangleId = 0
@@ -69,11 +79,11 @@ function getCircumcircle(a, b, c)
 end
 
 local function isInsideCircumcircle(point, triangle) --untested
-    local center, radius = getCircumcircle(triangle.edges[1].a, triangle.edges[1].b, triangle.edges[2].b)
-    if (point - center):len() < radius then
-        return true
+    local center, radius = getCircumcircle(triangle.vertices[1], triangle.vertices[2], triangle.vertices[3])
+    if radius == math.huge then  -- Collinear points
+        return false
     end
-    return false
+    return (point - center):len() < radius
 end
 
 local function isSharedEdge(edge, badTriangles, id) --only checks other
@@ -82,8 +92,8 @@ local function isSharedEdge(edge, badTriangles, id) --only checks other
             goto continue
         end
         for _, edgeB in ipairs(triangle.edges) do
-            if ((edge.a - edgeB.a):len() < 1e-5 and (edge.b - edgeB.b):len() < 1e-5) or
-               ((edge.a - edgeB.b):len() < 1e-5 and (edge.b - edgeB.a):len() < 1e-5) then
+            if edge.a:isEqual(edgeB.a, 1e-5) and edge.b:isEqual(edgeB.b, 1e-5) or
+               edge.a:isEqual(edgeB.b, 1e-5) and edge.b:isEqual(edgeB.a, 1e-5) then
                 return true
             end
         end
@@ -102,11 +112,9 @@ local function formTriangle(edge, point)
 end
 
 local function hasCommonVertex(triangle1, triangle2)
-    local vertexes1 = {triangle1.edges[1].a, triangle1.edges[1].b, triangle1.edges[2].b }
-    local vertexes2 = {triangle2.edges[1].a, triangle2.edges[1].b, triangle2.edges[2].b }
-    for _, vertex1 in ipairs(vertexes1) do
-    for _, vertex2 in ipairs(vertexes2) do
-        if (vertex1 - vertex2):len() < 1e-5 then
+    for _, vertex1 in ipairs(triangle1.vertices) do
+    for _, vertex2 in ipairs(triangle2.vertices) do
+        if vertex1:isEqual(vertex2, 1e-5) then
             return true
         end
     end
@@ -116,20 +124,30 @@ end
 
 function Delone.BowyerWatsonDeloneTriangulation(pointList)
     local triangulation = {} --triangles
+    --local siteTriangles = {}
 
     triangleId = 0
-    local superTrinagle = findSuperTriangle(pointList)
-    triangulation[superTrinagle.id] = superTrinagle
+    local superTriangle = findSuperTriangle(pointList)
+    triangulation[superTriangle.id] = superTriangle
 
-    for _, point in ipairs(pointList) do --add all the points to the triangulation
+    triangulation = Delone.addPoints(triangulation, pointList) --add all the points to the triangulation
+
+    for _, triangle in pairs(triangulation) do -- done inserting points, now clean up
+        if hasCommonVertex(triangle, superTriangle) then
+            triangulation[triangle.id] = nil
+        end
+    end
+    return triangulation
+end
+
+function Delone.addPoints(triangulation, points)
+    for _, point in ipairs(points) do
 
         local badTriangles = {}
         for _, triangle in pairs(triangulation) do -- first find all the triangles that are no longer valid due to the insertion
-            if not triangle then goto continue end
             if isInsideCircumcircle(point, triangle) then
                 table.insert(badTriangles, triangle)
             end
-            ::continue::
         end
 
         local polygon = {}
@@ -149,28 +167,63 @@ function Delone.BowyerWatsonDeloneTriangulation(pointList)
             local newTri = formTriangle(edge, point)
             triangulation[newTri.id] = newTri
         end
+
+    end
+    return triangulation
+end
+
+function Delone.movePoint(triangulation, oldPoint, newPoint) --??? bug
+    local badTriangles = {}
+    for _, triangle in pairs(triangulation) do
+        if hasVertex(triangle, oldPoint) then
+            table.insert(badTriangles, triangle)
+        end
     end
 
-    for _, triangle in pairs(triangulation) do -- done inserting points, now clean up
-        if not triangle then goto continue end
-        if hasCommonVertex(triangle, superTrinagle) then --false
-            triangulation[triangle.id] = nil
+    local polygon = {}
+    for _, triangle in ipairs(badTriangles) do -- find the boundary of the polygonal hole
+        for _, edge in ipairs(triangle.edges) do
+            if not isSharedEdge(edge, badTriangles, triangle.id) then --edge is not shared by any *other*! triangles in badTriangles
+                table.insert(polygon, edge)
+            end
         end
-        ::continue::
     end
-    return triangulation, pointList
+
+    for _, triangle in ipairs(badTriangles) do
+        triangulation[triangle.id] = nil
+    end
+
+    return Delone.addPoints(triangulation, {newPoint})
+end
+
+function Diagram:updateDiagramDelone(oldPoint, newPoint)
+    self:clear()
+    local triangles = Delone.movePoint(self.rawData, oldPoint, newPoint)
+    self.rawData = triangles
+
+    for _, triangle in pairs(triangles) do
+        for _, edge in ipairs(triangle.edges) do
+            self:insertVertex(edge.a)
+            self:insertVertex(edge.b)
+            self:insertEdge(edge.a, edge.b)
+        end
+    end
+
 end
 
 function Diagram:getDiagramDelone(points)
     self:clear()
-    local triangles, sites = Delone.BowyerWatsonDeloneTriangulation(points)
+    local triangles = Delone.BowyerWatsonDeloneTriangulation(points)
+    self.rawData = triangles
 
-    for _, site in ipairs(sites) do
+    for _, site in ipairs(points) do
         self:insertVertex(site)
     end
 
     for _, triangle in pairs(triangles) do
         for _, edge in ipairs(triangle.edges) do
+            --self:insertVertex(edge.a)
+            --self:insertVertex(edge.b)
             self:insertEdge(edge.a, edge.b)
         end
     end

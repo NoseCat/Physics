@@ -1,4 +1,5 @@
 local Object = require('Object.Object')
+local UniqueSet = require('DataStructure.UniqueSet')
 
 local Edge = {}
 Edge.__index = Edge
@@ -17,6 +18,11 @@ function Edge:draw(thickness, r, g, b, a)
     love.graphics.line(self.a.x, self.a.y, self.b.x, self.b.y)
 end
 
+function Edge:hash(margin)
+    local ha, hb = self.a:hash(margin), self.b:hash(margin)
+    return ha < hb and ha.."|"..hb or hb.."|"..ha
+end
+
 local Cell = {}
 Cell.__index = Cell
 function Cell:new(site)
@@ -32,8 +38,12 @@ function Cell:draw(vertexesize, thickness, r, g, b, a)
     love.graphics.setColor(r, g, b, a)
     love.graphics.circle("fill", self.site.x, self.site.y, vertexesize)
     for _, edge in ipairs(self.edges) do
-        edge:draw(thickness, r, g, b, a)
+        edge:draw(thickness, r, g, b, a/2)
     end
+end
+
+function Cell:hash(margin)
+   return self.site:hash(margin)
 end
 
 -- function Cell:getVertexes()
@@ -47,37 +57,31 @@ end
 
 Diagram = setmetatable({}, { __index = Object })
 Diagram.__index = Diagram
-function Diagram:new()
+function Diagram:new(margin)
     local obj = Object.new(self)
 
-    obj.vertexes = {} --points
-    obj.edges = {}
-    obj.cells = {}
+    obj.rawData = nil
+    obj.vertexes = UniqueSet:new() --points
+    obj.edges = UniqueSet:new()
+    obj.cells = UniqueSet:new()
+
+    obj.margin = margin or 1e-5
 
     return obj
 end
 
 function Diagram:clear()
-    self.vertexes = {}
-    self.edges = {}
-    self.cells = {}
+    self.vertexes:clear()
+    self.edges:clear()
+    self.cells:clear()
 end
 
 function Diagram:insertVertex(point)
-    for _, vertex in ipairs(self.vertexes) do
-        if vertex:isEqual(point, 1e-5) then return end
-    end
-    table.insert(self.vertexes, point)
+    self.vertexes:insert(point, self.margin)
 end
 
 function Diagram:insertEdge(a,b)
-    for _, edge in ipairs(self.edges) do
-        if (edge.a:isEqual(a, 1e-5) and edge.b:isEqual(b, 1e-5))
-        or (edge.a:isEqual(b, 1e-5) and edge.b:isEqual(a, 1e-5)) then
-            return
-        end
-    end
-    table.insert(self.edges, Edge:new(a,b))
+    self.edges:insert(Edge:new(a,b))
 end
 
 function Diagram:insertCell(site, edges)
@@ -85,25 +89,24 @@ function Diagram:insertCell(site, edges)
     for _, edge in ipairs(edges) do
         table.insert(cell.edges, Edge:new(edge.a, edge.b))
     end
-    table.insert(self.cells, cell)
+    self.cells:insert(cell)
 end
 
 function Diagram:drawVertexes(size, r, g, b, a)
     love.graphics.setColor(r, g, b, a)
-    for _, vertex in ipairs(self.vertexes) do
+    for _, vertex in pairs(self.vertexes.array) do
         love.graphics.circle("fill", vertex.x, vertex.y, size)
     end
 end
 
 function Diagram:drawEdges(thickness, r, g, b, a)
-    for _, edge in ipairs(self.edges) do
+    for _, edge in pairs(self.edges.array) do
         edge:draw(thickness, r, g, b, a)
     end
 end
 
 function Diagram:drawCells(siteSize, thickness, r, g, b, a)
-    if not self.cells then return end
-    for _, cell in ipairs(self.cells) do
+    for _, cell in pairs(self.cells.array) do
         cell:draw(siteSize, thickness, r, g, b, a)
     end
 end
