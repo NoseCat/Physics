@@ -18,7 +18,7 @@ function PhysicsManager:getInstance()
 
     local sTone = setmetatable({}, PhysicsManager)
     sTone.objs = {}
-    sTone.msgs = {}
+    --sTone.msgs = {}
     instance = sTone
 
     return instance
@@ -42,9 +42,9 @@ function PhysicsManager:iterate(delta, iterations)
     end
 
     for _, obj in ipairs(self.objs) do
-        obj:applyForce(Vector:new(0, 1) * obj.mass * FreeFallAcceleration) --gravity
-        obj:applyForce(obj.vel * -Drag * delta) --linear drag
-        obj:applyTorque(obj.rotVel * -RotDrag * delta) --angular drag
+        obj:applyForce(Vector:new(0, 1) * obj:getMass() * FreeFallAcceleration) --gravity
+        obj:applyForce(obj:getVel() * -Drag * delta) --linear drag
+        obj:applyTorque(obj:getRotVel() * -RotDrag * delta) --angular drag
     end
 
     for _, collision in ipairs(collisions) do

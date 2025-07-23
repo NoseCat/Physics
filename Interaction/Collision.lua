@@ -80,7 +80,7 @@ function Collision.Collide(ShapeA, ShapeB)
 end
 
 --returns array of points of intersections of lines of 2 objects
-function Collision:getPoints()
+function Collision:getPoints() --Something to improve
     local SArealPoints = self.shapeA:getRealPoints()
     local SBrealPoints = self.shapeB:getRealPoints()
     local points = {}
@@ -107,18 +107,13 @@ function Collision:resolve()
     end
     local massA = self.shapeA:getMass()
     local massB = self.shapeB:getMass()
-    local staticA = massB / (massA + massB)
-    local staticB = massA / (massA + massB)
-    if self.shapeA.static then
-        staticA = 0
-    end
-    if self.shapeB.static then
-        staticB = 0
-    end
-    if staticA ~= staticA then
+
+    local staticA = math.min(math.max( massB / (massA + massB) , 0), 1)
+    local staticB = math.min(math.max( massA / (massA + massB) , 0), 1)
+    if massB == math.huge then
         staticA = 1
     end
-    if staticB ~= staticB then
+    if massA == math.huge then
         staticB = 1
     end
     self.shapeA:unCollide(self.mtv * -1 * staticA, self, self.shapeB)
@@ -133,14 +128,14 @@ function Collision:applyBounce(delta)
     local rA = self.point - self.shapeA:getRealCenter()
     local rB = self.point - self.shapeB:getRealCenter()
     --relvel = relative Linear velocity + relative Angular velocity 
-    local relVel = (self.shapeB.vel - self.shapeA.vel) - rA:perp() * self.shapeA.rotVel + rB:perp() * self.shapeB.rotVel
+    local relVel = (self.shapeB:getVel() - self.shapeA:getVel()) - rA:perp() * self.shapeA:getRotVel() + rB:perp() * self.shapeB:getRotVel()
     local velAlongNormal = relVel:dot(mtv)
     if velAlongNormal > 0 then
         return
     end
 
-    local impulse = (1 + bounce) * velAlongNormal
-    impulse = impulse / (1/self.shapeA.mass + 1/self.shapeB.mass + (rA:cross(mtv)^2 / self.shapeA.inertia) + (rB:cross(mtv)^2 / self.shapeB.inertia))
+    local impulse = velAlongNormal * (bounce + 1)
+    impulse = impulse / (1/self.shapeA:getMass() + 1/self.shapeB:getMass() + (rA:cross(mtv)^2 / self.shapeA:getInertia()) + (rB:cross(mtv)^2 / self.shapeB:getInertia()))
 
     self.shapeA:applyForceAtPoint(mtv * (impulse / delta), self.point)
     self.shapeB:applyForceAtPoint(mtv * (impulse / -delta), self.point)
@@ -154,7 +149,7 @@ function Collision:applyFriction(delta)
     local rA = self.point - self.shapeA:getRealCenter()
     local rB = self.point - self.shapeB:getRealCenter()
     --relvel = relative Linear velocity + relative Angular velocity 
-    local relVel = (self.shapeB.vel - self.shapeA.vel) - rA:perp() * self.shapeA.rotVel + rB:perp() * self.shapeB.rotVel
+    local relVel = (self.shapeB:getVel() - self.shapeA:getVel()) - rA:perp() * self.shapeA:getRotVel() + rB:perp() * self.shapeB:getRotVel()
     local velAlongNormal = relVel:dot(mtv)
     if velAlongNormal > 0 then
         return
@@ -167,7 +162,7 @@ function Collision:applyFriction(delta)
     perp = perp:normalized()
     local velPerpNormal = relVel:dot(perp)
     local impulse = velPerpNormal * (friction)
-    impulse = impulse / (1/self.shapeA.mass + 1/self.shapeB.mass + (rA:cross(perp)^2 / self.shapeA.inertia) + (rB:cross(perp)^2 / self.shapeB.inertia))
+    impulse = impulse / (1/self.shapeA:getMass() + 1/self.shapeB:getMass() + (rA:cross(perp)^2 / self.shapeA:getInertia()) + (rB:cross(perp)^2 / self.shapeB:getInertia()))
 
     self.shapeA:applyForceAtPoint(perp * (impulse / delta), self.point)
     self.shapeB:applyForceAtPoint(perp * (impulse / -delta), self.point)

@@ -7,8 +7,6 @@ function Shape:new(a, b)
 
     obj.rot = 0
 
-    --relative to pos
-    obj.center = Vector:new(a,b)
     --reletive to pos
     obj.points = {}
 
@@ -17,44 +15,44 @@ end
 
 function Shape:draw()
     Object.draw(self)
-    love.graphics.setColor({1,0,0})
-    local center = self:getRealCenter()
-    love.graphics.circle("fill", center.x, center.y, 10)
+    if DebugVI.showShapeCenter then
+        love.graphics.setColor(1,0,0)
+        local center = self:getRealCenter()
+        love.graphics.circle("fill", center.x, center.y, 10)
+    end
 
     if #self.points < 3 then
         return
     end
 
-    love.graphics.setColor(0.7, 0.7, 0.7)
-    local realPoints = self:getRealPoints()
-    local points = {}
-    for index, point in ipairs(realPoints) do
-        --love.graphics.circle("line", point.x, point.y, 5)
-        love.graphics.print(index, point.x, point.y)
-        table.insert(points, point.x)
-        table.insert(points, point.y)
+    if DebugVI.showShapeEdges then
+        love.graphics.setColor(0.7, 0.7, 0.7)
+        local realPoints = self:getRealPoints()
+        local points = {}
+        for index, point in ipairs(realPoints) do
+            if DebugVI.showShapePointOrder then
+                love.graphics.print(index, point.x, point.y)
+            end
+            table.insert(points, point.x)
+            table.insert(points, point.y)
+        end
+        love.graphics.setLineWidth(3)
+        love.graphics.polygon("line", points)
     end
-    love.graphics.setLineWidth(3)
-    love.graphics.polygon("line", points)
 
-    -- local triangles = self:triangulate()
-    -- for _, triangle in ipairs(triangles) do
-    --     love.graphics.setColor(0.7, 0, 0)
-    --     love.graphics.setLineWidth(1)
-    --     local tpoints = {}
-    --     for _, point in ipairs(triangle:getRealPoints()) do
-    --         table.insert(tpoints, point.x)
-    --         table.insert(tpoints, point.y)
-    --     end
-    --     love.graphics.polygon("line", tpoints)
-    --    -- triangle.kill = true
-    -- end
-    -- love.graphics.setLineWidth(1)
-    -- love.graphics.setColor(1, 0, 0)
-    -- local triangles = self:triangulate()
-    -- for _, triangle in ipairs(triangles) do
-    --     --love.graphics.polygon("line", triangle)
-    -- end
+    if not DebugVI.showShapeTriagnulation then return end
+
+    local triangles = self:triangulate()
+    for _, triangle in ipairs(triangles) do
+        love.graphics.setColor(0.7, 0, 0)
+        love.graphics.setLineWidth(1)
+        local tpoints = {}
+        for _, point in ipairs(triangle) do
+            table.insert(tpoints, point.x)
+            table.insert(tpoints, point.y)
+        end
+        love.graphics.polygon("line", tpoints)
+    end
 end
 
 function Shape:update(delta)
@@ -66,60 +64,25 @@ function Shape:addPoint(x, y)
     self:updateConstants()
 end
 
-local function findIntersections(points)
-    if #points <= 3 then
-        return {}
-    end
-    local intersections = {}
-    for i = 1, #points, 1 do
-        local iNext = (i % #points) + 1
-        for j = i + 2, #points, 1 do
-            local jNext = (j % #points) + 1
-
-            if j == iNext or jNext == i then
-                goto continue
-            end
-            local intersect = Vector.SegmentIntersect(points[i], points[iNext], points[j], points[jNext])
-            if intersect then
-                table.insert(intersections, intersect)
-            end
-            ::continue::
-        end
-    end
-    return intersections
-end
-
+--is called when we add points. Useful to calculate shape dependent behaviour once
 function Shape:updateConstants()
-    if #self.points == 0 then
-        return
-    end
-
-    local sumPoints = Vector:new(0,0)
-    for _, point in ipairs(self.points) do
-        sumPoints = sumPoints + point
-    end
-    self.center = sumPoints / #self.points
-end
-
-local function getRotatedPoints(self)
-    local points = {}
-    for _, point in ipairs(self.points) do
-        table.insert(points, point:rotateAround(self.center, self.rot))
-    end
-    return points
+   return
 end
 
 function Shape:getRealPoints()
-    local rotPoints = getRotatedPoints(self)
     local points = {}
-    for _, point in ipairs(rotPoints) do
-        table.insert(points, point + self.pos)
+    for _, point in ipairs(self.points) do
+        table.insert(points, point:rotateAround(self:getRealCenter() - self.pos, self.rot) + self.pos)
     end
     return points
 end
 
 function Shape:getRealCenter()
-    return self.center + self.pos
+    local center = Vector:new(0, 0)
+    for _, point in ipairs(self.points) do
+        center = center + point
+    end
+    return center / #self.points + self.pos
 end
 
 function Shape:containsPoint(point)
@@ -168,8 +131,27 @@ function Shape:getArea()
     return math.abs(sum) / 2
 end
 
-function Shape:print()
-    print("quirky shape")
+local function findIntersections(points)
+    if #points <= 3 then
+        return {}
+    end
+    local intersections = {}
+    for i = 1, #points, 1 do
+        local iNext = (i % #points) + 1
+        for j = i + 2, #points, 1 do
+            local jNext = (j % #points) + 1
+
+            if j == iNext or jNext == i then
+                goto continue
+            end
+            local intersect = Vector.SegmentIntersect(points[i], points[iNext], points[j], points[jNext])
+            if intersect then
+                table.insert(intersections, intersect)
+            end
+            ::continue::
+        end
+    end
+    return intersections
 end
 
 function Shape:triangulate()

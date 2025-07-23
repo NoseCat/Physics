@@ -6,7 +6,6 @@ function Bbox:new()
     local obj = Object.new(self, math.huge, -math.huge)
 
     obj.pointB = Vector:new(-math.huge, math.huge)
-    obj.on = false
 
     return obj
 end
@@ -42,9 +41,7 @@ end
 --end
 
 function Bbox:draw()
-    if not self.on then
-        return
-    end
+    if not DebugVI.showBoundingBox then return end
     love.graphics.setColor(1, 0, 0)
     love.graphics.setLineWidth(1)
     love.graphics.rectangle("line", self.pos.x, self.pos.y, self.pointB.x - self.pos.x, self.pointB.y - self.pos.y)

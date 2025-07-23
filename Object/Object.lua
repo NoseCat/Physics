@@ -2,6 +2,7 @@ require('Math.Vector')
 local OBJECTMANAGER = require('Object.Manager')
 local OM = OBJECTMANAGER:getInstance()
 OBJECTMANAGER = nil
+DebugVI = require('Debug.VisualInfo')
 
 Object = {}
 Object.__index = Object
@@ -22,10 +23,9 @@ function Object:update(delta)
 end
 
 function Object:draw()
+    if not DebugVI.showObjectPos then return end
     love.graphics.setColor({1,1,0})
     love.graphics.circle("fill", self.pos.x, self.pos.y, 5)
-
-    love.graphics.setColor({1,0,0}) --standart color
 end
 
 function Object:kill()

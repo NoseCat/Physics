@@ -1,0 +1,11 @@
+maybe move bodies in iterations?
+maybe in uncollide bodies dont move if movement causes collision?
+maybe shader physics?
+maybe bodies handle their bounce and friction themselves?
+
+SoftBody should check which of if points are inside the other body in uncollide
+force under certain treshold should not apply
+
+bug: softbodies interect wrong with non convex shapes
+bug: non convex shapes apply wrong (friction?/rotation?)
+bug: big delta causes violent behaviour

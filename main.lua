@@ -5,10 +5,10 @@
 
 require('Math.Vector')
 
-require('Object.Object')
-Shape = require('Object.Shape')
-PhysicsBody = require('Object.PhysicsBody')
-SoftBody = require('Object.SoftBody')
+DynamicBody = require('Object.PhysicsObject.DynamicBody') --!!
+SoftBody = require('Object.PhysicsObject.SoftBody')
+StaticBody = require('Object.PhysicsObject.StaticBody')
+
 require('Interaction.Collision')
 local OBJECTMANAGER = require('Object.Manager')
 OM = OBJECTMANAGER:getInstance()
@@ -27,41 +27,38 @@ function love.load()
     love.window.setMode(800, 600)
 
     local points = {}
-    for i = 1, 25, 1 do
-        table.insert(points, Vector:new(math.random(800), math.random(600)))        
+    for i = 1, 15, 1 do
+        table.insert(points, Vector:new(math.random(800), math.random(600)))
     end
     --test
-    --local dia = Voronoi:new(points)
+    local dia = Voronoi:new(points)
 
-    floor = PhysicsBody:new(400, 580, math.huge)
-    floor:addPoint(400, 0)
-    floor:addPoint(-400, 0)
-    floor:addPoint(-400, 20)
+    floor = StaticBody:new(400, 580)
+    floor:addPoint(-400, -20)
+    floor:addPoint(400, -20)
     floor:addPoint(400, 20)
-    floor.static = true
+    floor:addPoint(-400, 20)
 
-    leftWall = PhysicsBody:new(-10, 300, math.huge)
+    leftWall = StaticBody:new(-10, 300)
     leftWall:addPoint(0, -300)
     leftWall:addPoint(20, -300)
     leftWall:addPoint(20, 300)
     leftWall:addPoint(0, 300)
-    leftWall.static = true
 
-    rightWall = PhysicsBody:new(790, 300, math.huge)
+    rightWall = StaticBody:new(790, 300)
     rightWall:addPoint(0, -300)
     rightWall:addPoint(20, -300)
     rightWall:addPoint(20, 280)
     rightWall:addPoint(0, 280)
-    rightWall.static = true
 
-    s1 = PhysicsBody:new(400,200, 5)
+    s1 = DynamicBody:new(400,200, 5)
     for i = 0, 3 - 1 do
         local angle = (i / 3) * math.pi * 2
         local x = math.cos(angle) * 50
         local y = math.sin(angle) * 50
         s1:addPoint(x, y)
     end
-    s2 = PhysicsBody:new(150,200, 2)
+    s2 = DynamicBody:new(150,200, 2)
     s2:addPoint(80,0)
     s2:addPoint(20,-60)
     s2:addPoint(-40,0)
@@ -69,13 +66,13 @@ function love.load()
     s2.rot = s2.rot + math.pi/4
     s2.rotVel = 10
     s2.pos.y = s2.pos.y + 10
-    cube = PhysicsBody:new(380, 440, math.huge)
+    cube = StaticBody:new(380, 440)
     cube:addPoint(-40, -40)
     cube:addPoint(40, -40)
     cube:addPoint(40, 40)
     cube:addPoint(-40, 40)
-    cube.static = true
-    bowl = PhysicsBody:new(100, 0, 10)
+
+    bowl = DynamicBody:new(100, 0, 10)
     bowl.static = true
     bowl:addPoint(50, 0)
     bowl:addPoint(75, 40)
@@ -88,7 +85,7 @@ function love.load()
     bowl:addPoint(-75, 40)
     bowl.static = false
     bowl:addPoint(-50, 0)
-    bowl2 = PhysicsBody:new(300, 0, 10)
+    bowl2 = DynamicBody:new(300, 0, 10)
     bowl2.static = true
     bowl2:addPoint(50, 0)
     bowl2:addPoint(75, 40)
@@ -102,7 +99,7 @@ function love.load()
     bowl2.static = false
     bowl2:addPoint(-50, 0)
 
-    s3 = SoftBody:new(600,200, 10, 1)
+    s3 = SoftBody:new(600,200, 10)
     local pointCount = 15
     local radius = 80
     for i = 0, pointCount - 1 do
@@ -165,8 +162,8 @@ function love.update(dt)
         grabbed:applyForceAtPoint((mouse - (grabbed:getRealCenter() + grabPoint:rotate(grabbed.rot - grabRotation))) * 10, grabbed:getRealCenter() + grabPoint:rotate(grabbed.rot - grabRotation))
     end
 
-    PM:iterate(dt, 5)
     OM:update(dt)
+    PM:iterate(dt, 5)
 end
 
 function love.draw()
