@@ -11,12 +11,13 @@ function StaticBody:new(a, b)
     return obj
 end
 
-function StaticBody:update(delta)
-    PhysicsObject.update(self, delta)
+function StaticBody:physicsUpdate(delta, iterations)
+    PhysicsObject.physicsUpdate(self, delta, iterations)
+    delta = delta / iterations
 end
 
-function StaticBody:updateConstants() --!!!!
-    Shape.updateConstants(self)
+function StaticBody:update(delta)
+    return
 end
 
 function StaticBody:applyForce(force)
@@ -31,7 +32,7 @@ function StaticBody:applyForceAtPoint(force, point)
     return
 end
 
-function StaticBody:unCollide(dir)
+function StaticBody:unCollide(dir, collision, otherShape)
     return
 end
 

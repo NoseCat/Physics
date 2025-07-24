@@ -14,15 +14,23 @@ function PhysicsObject:new(a, b)
     obj.bounce = 0.5
     obj.friction = 0.3
 
-    obj.static = false --!!!!
     obj.bbox = Bbox:new()
 
     table.insert(PM.objs, obj)
     return obj
 end
 
-function PhysicsObject:update(delta) -- inherit
+function PhysicsObject:physicsUpdate(delta, iterations) -- inherit
+    delta = delta / iterations
     self.bbox:updatePoints(self:getRealPoints())
+end
+
+function PhysicsObject:physicsUpdateFinish(delta)
+    return
+end
+
+function PhysicsObject:update(delta)
+    return
 end
 
 function PhysicsObject:updateConstants() --!!!!

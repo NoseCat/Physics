@@ -86,37 +86,66 @@ function Shape:getRealCenter()
 end
 
 function Shape:containsPoint(point)
-    local realPoints = self:getRealPoints()
-    local x, y = point.x, point.y
-    local inside = false
+    local points = self:getRealPoints()
+    local isInside = false
 
-    -- Ray-casting algorithm
+    for i = 1, #points do
+        local j = i % #points + 1
+        local v1 = points[i]
+        local v2 = points[j]
+
+        -- Skip horizontal edges
+        if v1.y == v2.y then goto continue end
+
+        local minY = math.min(v1.y, v2.y)
+        local maxY = math.max(v1.y, v2.y)
+
+        -- Check if point's y is strictly above the edge's minY and at/below maxY
+        if point.y > minY and point.y <= maxY then
+            local edge = v2 - v1
+            local t = (point.y - v1.y) / edge.y
+            local intersection = v1 + edge * t
+
+            -- Check if point is left of intersection (ray to the right)
+            if point.x <= intersection.x then
+                isInside = not isInside
+            end
+        end
+        ::continue::
+    end
+
+    return isInside
+end
+
+function Shape:getBeamIntersection(beamOrigin, beamDirection)
+    local realPoints = self:getRealPoints()
+    local closestIntersection = nil
+    local closestDistance = math.huge
+    beamDirection = beamDirection:normalized()
+
+    -- Check each edge of the shape
     for i = 1, #realPoints do
         local j = i % #realPoints + 1
-        local xi, yi = realPoints[i].x, realPoints[i].y
-        local xj, yj = realPoints[j].x, realPoints[j].y
+        local edgeStart = realPoints[i]
+        local edgeEnd = realPoints[j]
 
-        -- Check if the point is on an edge (optional, depending on your use case)
-        if (xi == xj and xi == x and y > math.min(yi, yj) and y <= math.max(yi, yj)) or
-           (yi == yj and yi == y and x > math.min(xi, xj) and x <= math.max(xi, xj)) then
-            return true
-        end
+        local intersection = Vector.SegmentIntersect(
+            beamOrigin, beamOrigin + beamDirection * 10000, -- Long ray in beam direction
+            edgeStart, edgeEnd
+        )
 
-        -- Check if the ray intersects with the edge
-        if yi > yj then
-            xi, xj = xj, xi
-            yi, yj = yj, yi
-        end
+        if intersection then
+            local distance = (intersection - beamOrigin):len2() -- Use squared distance for comparison
 
-        if y > yi and y <= yj then
-            local slope = (xj - xi) / (yj - yi)
-            if x <= xi + slope * (y - yi) then
-                inside = not inside
+            -- Check if the intersection is in the same direction as the beam
+            if distance < closestDistance then
+                closestIntersection = intersection
+                closestDistance = distance
             end
         end
     end
 
-    return inside
+    return closestIntersection
 end
 
 function Shape:getArea()

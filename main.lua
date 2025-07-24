@@ -36,19 +36,19 @@ function love.load()
     floor = StaticBody:new(400, 580)
     floor:addPoint(-400, -20)
     floor:addPoint(400, -20)
-    floor:addPoint(400, 20)
-    floor:addPoint(-400, 20)
+    floor:addPoint(400, 120)
+    floor:addPoint(-400, 120)
 
     leftWall = StaticBody:new(-10, 300)
-    leftWall:addPoint(0, -300)
+    leftWall:addPoint(-100, -300)
     leftWall:addPoint(20, -300)
     leftWall:addPoint(20, 300)
-    leftWall:addPoint(0, 300)
+    leftWall:addPoint(-100, 300)
 
     rightWall = StaticBody:new(790, 300)
     rightWall:addPoint(0, -300)
-    rightWall:addPoint(20, -300)
-    rightWall:addPoint(20, 280)
+    rightWall:addPoint(120, -300)
+    rightWall:addPoint(120, 280)
     rightWall:addPoint(0, 280)
 
     s1 = DynamicBody:new(400,200, 5)
@@ -99,8 +99,8 @@ function love.load()
     bowl2.static = false
     bowl2:addPoint(-50, 0)
 
-    s3 = SoftBody:new(600,200, 10)
-    local pointCount = 15
+    s3 = SoftBody:new(600,200, 5)
+    local pointCount = 20
     local radius = 80
     for i = 0, pointCount - 1 do
         local angle = (i / pointCount) * math.pi * 2
@@ -108,7 +108,7 @@ function love.load()
         local y = math.sin(angle) * radius
         s3:addPoint(x, y)
     end
-    s4 = SoftBody:new(600,0, 10, 1)
+    s4 = SoftBody:new(600,0, 10)
     for i = 0, pointCount - 1 do
         local angle = (i / pointCount) * math.pi * 2
         local x = math.cos(angle) * radius

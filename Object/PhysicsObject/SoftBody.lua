@@ -173,82 +173,34 @@ function SoftBody:getInertia()
     return k * self:getMass() * L^2
 end
 
-local staticTodynamicMovement = 0.9
+local staticTodynamicMovement = 1
 --staticTodynamicMovement = 1/ (1 + 2*k)
+local collisionPhysics = 0.25
 function SoftBody:unCollide(dir, collision, otherShape)
-    local collisionPoint = collision.point
-
-    --calculate width (area) of collsion
-    local area = {}
-    if #collision.points > 1 then
-        local projections = {}
-        for index = 1, #collision.points do
-            table.insert(projections, index, dir:normalized():perp() * (collision.points[index] - collisionPoint):dot(dir:normalized():perp()))
-        end
-
-        local max_dist = -math.huge
-        for i = 1, #projections do
-            for j = i+1, #projections do
-                local dist = (projections[i] - projections[j]):len()
-                if dist > max_dist then
-                    max_dist = dist
-                    area.max = collisionPoint + projections[i]
-                    area.min = collisionPoint + projections[j]
-                end
-            end
-        end
-    end
-
-    if not area.max then
-        area.max = dir:normalized():perp() * math.huge
-    end
-    if not area.min then
-        area.min = dir:normalized():perp() * -math.huge
-    end
-
-    if (area.max - area.min):len() < getMinRestLen(self) then
-        area.min = collision.point - dir:perp():normalized() * getMinRestLen(self)/2
-        area.max = collision.point + dir:perp():normalized() * getMinRestLen(self)/2
-    end
-
-    area.max = area.max + area.max:normalized() * getMinRestLen(self)/5
-    area.min = area.min - area.min:normalized() * getMinRestLen(self)/5
-
-    --dyanimc movement (only affected points)
+    --dynamic movement (points inside other shape)
     for index = 1, #self.points do
-        --points is inside "depth" of collsion
-        local len = dir:normalized() * (self.points[index] - collisionPoint):dot(dir:normalized())
-        if len:len() > dir:len() then
-            goto continue
-        end
+        if not otherShape:containsPoint(self.points[index]) then goto continue end
 
-        --points is inside "width" of collsion
-        local proj = collisionPoint + dir:perp():normalized() * (self.points[index] - collisionPoint):dot(dir:perp():normalized())
-        local areaLen = (area.max - area.min):len()
-        if (proj - area.max):len() > areaLen or (proj - area.min):len() > areaLen then
-            goto continue
-        end
+        local centerDir = self:getRealCenter() - self.points[index]
+        local onEdge = otherShape:getBeamIntersection(self.points[index], centerDir)
+        if not onEdge then goto continue end
+        local pointMove = (onEdge - self.points[index])
 
-        local toPoint = dir:normalized() * (collisionPoint - self.points[index]):dot(dir:normalized())
-        self.points[index] = self.points[index] + (toPoint + dir) * staticTodynamicMovement
-        --this is how you move points without impacting velocity
-        local toPointPrev = dir:normalized() * (collisionPoint - self.pointsPrev[index]):dot(dir:normalized())
-        self.pointsPrev[index] = self.pointsPrev[index] + (toPointPrev + dir) * staticTodynamicMovement
+        self.points[index] = self.points[index] + pointMove * staticTodynamicMovement
+        self.pointsPrev[index] = self.pointsPrev[index] + pointMove * (1 - collisionPhysics) * staticTodynamicMovement
         ::continue::
     end
     --static movement (all points)
     for index = 1, #self.points do
         self.points[index] = self.points[index] + dir * (1 - staticTodynamicMovement)
-        self.pointsPrev[index] = self.pointsPrev[index] + dir * (1 - staticTodynamicMovement)
+        self.pointsPrev[index] = self.pointsPrev[index] + dir * (1 - collisionPhysics) * (1 - staticTodynamicMovement)
     end
 end
 
-function SoftBody:update(delta)
-    PhysicsObject.update(self, delta)
-    for _ = 1, 8 do
-        attachPoints(self)
-        preserveArea(self)
-    end
+function SoftBody:physicsUpdate(delta, iterations)
+    PhysicsObject.physicsUpdate(self, delta, iterations)
+    delta = delta / iterations
+
     for index = 1, #self.points do
         --verlet integration
         local nextPos = self.points[index] * 2 - self.pointsPrev[index] + self.pointsAccel[index] * delta ^ 2
@@ -256,10 +208,23 @@ function SoftBody:update(delta)
         self.points[index] = nextPos
 
         self.pointsAccel[index] = self.pointsForce[index] / (self.mass / #self.points)
-        self.pointsForce[index] = Vector:new(0,0)
+    end
+    for _ = 1, 5 / iterations do
+        attachPoints(self)
+        preserveArea(self)
     end
 
     self.rot = getRot(self)
+end
+
+function SoftBody:physicsUpdateFinish(delta)
+    for index = 1, #self.points do
+        self.pointsForce[index] = Vector:new(0,0)
+    end
+end
+
+function SoftBody:update(delta)
+    PhysicsObject.update(self, delta)
 end
 
 --===============

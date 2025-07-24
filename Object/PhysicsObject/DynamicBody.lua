@@ -19,8 +19,9 @@ function DynamicBody:new(a, b, m)
     return obj
 end
 
-function DynamicBody:update(delta)
-    PhysicsObject.update(self, delta)
+function DynamicBody:physicsUpdate(delta, iterations)
+    PhysicsObject.physicsUpdate(self, delta, iterations)
+    delta = delta / iterations
 
     self.accel = self.force / self.mass
     self.vel = self.vel + self.accel * delta
@@ -29,9 +30,15 @@ function DynamicBody:update(delta)
     self.rotAccel = self.torque / self.inertia
     self.rotVel = self.rotVel + self.rotAccel * delta
     self.rot = self.rot + self.rotVel * delta
+end
 
+function DynamicBody:physicsUpdateFinish(delta)
     self.force = Vector:new(0, 0)
     self.torque = 0
+end
+
+function DynamicBody:update(delta)
+    return
 end
 
 function DynamicBody:updateConstants()
@@ -50,23 +57,14 @@ function DynamicBody:updateConstants()
 end
 
 function DynamicBody:applyForce(force)
-    if self.static then
-        return
-    end
     self.force = self.force + force
 end
 
 function DynamicBody:applyTorque(torque)
-    if self.static then
-        return
-    end
     self.torque = self.torque + torque
 end
 
 function DynamicBody:applyForceAtPoint(force, point)
-    if self.static then
-        return
-    end
     self:applyForce(force)
 
     local r = point - self:getRealCenter()
