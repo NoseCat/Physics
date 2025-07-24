@@ -5,9 +5,7 @@
 
 require('Math.Vector')
 
-DynamicBody = require('Object.PhysicsObject.DynamicBody') --!!
-SoftBody = require('Object.PhysicsObject.SoftBody')
-StaticBody = require('Object.PhysicsObject.StaticBody')
+Creator = require('Item.Creator')
 
 require('Interaction.Collision')
 local OBJECTMANAGER = require('Object.Manager')
@@ -51,70 +49,67 @@ function love.load()
     rightWall:addPoint(120, 280)
     rightWall:addPoint(0, 280)
 
-    s1 = DynamicBody:new(400,200, 5)
-    for i = 0, 3 - 1 do
-        local angle = (i / 3) * math.pi * 2
-        local x = math.cos(angle) * 50
-        local y = math.sin(angle) * 50
-        s1:addPoint(x, y)
-    end
-    s2 = DynamicBody:new(150,200, 2)
-    s2:addPoint(80,0)
-    s2:addPoint(20,-60)
-    s2:addPoint(-40,0)
-    s2:addPoint(20,60)
-    s2.rot = s2.rot + math.pi/4
-    s2.rotVel = 10
-    s2.pos.y = s2.pos.y + 10
-    cube = StaticBody:new(380, 440)
-    cube:addPoint(-40, -40)
-    cube:addPoint(40, -40)
-    cube:addPoint(40, 40)
-    cube:addPoint(-40, 40)
+    local NoseCat = love.graphics.newImage("Sprites/NoseCat.png")
+    -- s1 = TexturedDynamicBody:new(400,200, 5, NoseCat)
+    -- for i = 0, 3 - 1 do
+    --     local angle = (i / 3) * math.pi * 2
+    --     local x = math.cos(angle) * 50
+    --     local y = math.sin(angle) * 50
+    --     s1:addPoint(x, y)
+    -- end
+    -- s2 = TexturedDynamicBody:new(150,200, 2, NoseCat)
+    -- s2:addPoint(80,0)
+    -- s2:addPoint(20,-60)
+    -- s2:addPoint(-40,0)
+    -- s2:addPoint(20,60)
+    -- s2.rot = s2.rot + math.pi/4
+    -- s2.rotVel = 10
+    -- s2.pos.y = s2.pos.y + 10
+    -- cube = StaticBody:new(380, 440)
+    -- cube:addPoint(-40, -40)
+    -- cube:addPoint(40, -40)
+    -- cube:addPoint(40, 40)
+    -- cube:addPoint(-40, 40)
 
-    bowl = DynamicBody:new(100, 0, 10)
-    bowl.static = true
-    bowl:addPoint(50, 0)
-    bowl:addPoint(75, 40)
-    bowl:addPoint(75, 80)
-    bowl:addPoint(65, 80)
-    bowl:addPoint(55, 20)
-    bowl:addPoint(-55, 20)
-    bowl:addPoint(-65, 80)
-    bowl:addPoint(-75, 80)
-    bowl:addPoint(-75, 40)
-    bowl.static = false
-    bowl:addPoint(-50, 0)
-    bowl2 = DynamicBody:new(300, 0, 10)
-    bowl2.static = true
-    bowl2:addPoint(50, 0)
-    bowl2:addPoint(75, 40)
-    bowl2:addPoint(75, 80)
-    bowl2:addPoint(65, 80)
-    bowl2:addPoint(55, 20)
-    bowl2:addPoint(-55, 20)
-    bowl2:addPoint(-65, 80)
-    bowl2:addPoint(-75, 80)
-    bowl2:addPoint(-75, 40)
-    bowl2.static = false
-    bowl2:addPoint(-50, 0)
+    -- bowl = TexturedStaticBody:new(100, 0, NoseCat)
+    -- bowl:addPoint(50, 0)
+    -- bowl:addPoint(75, 40)
+    -- bowl:addPoint(75, 80)
+    -- bowl:addPoint(65, 80)
+    -- bowl:addPoint(55, 20)
+    -- bowl:addPoint(-55, 20)
+    -- bowl:addPoint(-65, 80)
+    -- bowl:addPoint(-75, 80)
+    -- bowl:addPoint(-75, 40)
+    -- bowl:addPoint(-50, 0)
+    -- bowl2 = DynamicBody:new(300, 0, 10)
+    -- bowl2:addPoint(50, 0)
+    -- bowl2:addPoint(75, 40)
+    -- bowl2:addPoint(75, 80)
+    -- bowl2:addPoint(65, 80)
+    -- bowl2:addPoint(55, 20)
+    -- bowl2:addPoint(-55, 20)
+    -- bowl2:addPoint(-65, 80)
+    -- bowl2:addPoint(-75, 80)
+    -- bowl2:addPoint(-75, 40)
+    -- bowl2:addPoint(-50, 0)
 
-    s3 = SoftBody:new(600,200, 5)
-    local pointCount = 20
-    local radius = 80
-    for i = 0, pointCount - 1 do
-        local angle = (i / pointCount) * math.pi * 2
-        local x = math.cos(angle) * radius
-        local y = math.sin(angle) * radius
-        s3:addPoint(x, y)
-    end
-    s4 = SoftBody:new(600,0, 10)
-    for i = 0, pointCount - 1 do
-        local angle = (i / pointCount) * math.pi * 2
-        local x = math.cos(angle) * radius
-        local y = math.sin(angle) * radius
-        s4:addPoint(x, y)
-    end
+    -- s3 = TexturedSoftBody:new(600,200, 5, NoseCat)
+    -- local pointCount = 20
+    -- local radius = 80
+    -- for i = 0, pointCount - 1 do
+    --     local angle = (i / pointCount) * math.pi * 2
+    --     local x = math.cos(angle) * radius
+    --     local y = math.sin(angle) * radius
+    --     s3:addPoint(x, y)
+    -- end
+    -- s4 = SoftBody:new(600,0, 10)
+    -- for i = 0, pointCount - 1 do
+    --     local angle = (i / pointCount) * math.pi * 2
+    --     local x = math.cos(angle) * radius
+    --     local y = math.sin(angle) * radius
+    --     s4:addPoint(x, y)
+    -- end
 
     NextTime = love.timer.getTime()
 end
@@ -127,6 +122,8 @@ local grabPoint = Vector:new(0,0)
 local grab = false
 local grabbed = nil
 local grabRotation = 0
+
+local spamPrevention = false
 function love.update(dt)
     Delta = dt
     NextTime = NextTime + 1 / FPSLimit
@@ -160,6 +157,18 @@ function love.update(dt)
     end
     if grab and grabbed and love.mouse.isDown(1) then
         grabbed:applyForceAtPoint((mouse - (grabbed:getRealCenter() + grabPoint:rotate(grabbed.rot - grabRotation))) * 10, grabbed:getRealCenter() + grabPoint:rotate(grabbed.rot - grabRotation))
+    end
+
+    if not love.mouse.isDown(1) and spamPrevention  then
+        spamPrevention = false
+    end
+    if love.mouse.isDown(1) and not spamPrevention then
+        spamPrevention = true
+        if math.random(0,1) == 0 then
+            Creator.create("box1", mouse.x, mouse.y)
+        else
+            Creator.create("box2", mouse.x, mouse.y)
+        end
     end
 
     OM:update(dt)

@@ -4,5 +4,5 @@ maybe force under certain treshold should not apply?
 
 CompileLoveGame needs improvments
 
-bug: softbodies interect wrong with non convex shapes
-bug: non convex shapes apply wrong (friction?/rotation?)
+SoftBodies move things
+SoftVodies dont "bounce"
